@@ -95,7 +95,7 @@ public class GameLoop extends Thread {
             elapsedTime = System.currentTimeMillis() - startTime;
             if (elapsedTime >= 1000) {
                 averageUPS = updateCount / (1E-3 * elapsedTime);
-                averageFPS = frameCount / (1E-3 * elapsedTime);
+                averageFPS = Math.round(frameCount / (1E-3 * elapsedTime));
                 updateCount = 0;
                 frameCount = 0;
                 startTime = System.currentTimeMillis();
