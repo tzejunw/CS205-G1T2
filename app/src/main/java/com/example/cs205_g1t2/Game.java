@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
@@ -202,7 +203,31 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         canvas.drawText("FPS: " + averageFPS, 1700, 100, paint);
     }
 
+    //    Original
+//    public void update() {
+//        player.update();
+//        for (Process p : processes) {
+//            p.update();
+//        }
+//    }
+
+    // After a process runs for a while (is green for sometime), terminate it (it disappears)
     public void update() {
         player.update();
+        Iterator<Process> iterator = processes.iterator();
+        while (iterator.hasNext()) {
+            Process p = iterator.next();
+            p.update();
+            if (p.isCompleted()) {
+                // Also clear its execution slot
+                for (int i = 0; i < occupiedSlots.length; i++) {
+                    if (occupiedSlots[i] == p) {
+                        occupiedSlots[i] = null;
+                    }
+                }
+                iterator.remove(); // remove from the list
+            }
+        }
     }
+
 }
