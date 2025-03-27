@@ -1,5 +1,7 @@
 package com.example.cs205_g1t2;
 
+import static android.os.SystemClock.sleep;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Game extends SurfaceView implements SurfaceHolder.Callback {
+public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     private final Player player;
     private GameLoop gameLoop;
     private final List<Process> processes = new ArrayList<>();
@@ -39,6 +41,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
     // Process layout configuration
     private final Process[] occupiedSlots = new Process[4]; // Track slot usage
+    private boolean gameOver = false;
 
     public Game(Context context) {
         super(context);
@@ -57,11 +60,14 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         float startX = 100;
         float spacing = (metrics.widthPixels - 200) / 7;
         for(int i = 0; i < 8; i++) {
-            processes.add(new Process(
+            Process p = new Process(
                     startX + (i * spacing),
                     metrics.heightPixels - 200,
                     Color.RED
-            ));
+            );
+            // Set the game as listener for timer finish events
+            p.setListener(this);
+            processes.add(p);
         }
 
 
@@ -77,11 +83,15 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void addProcess(Process process) {
         // Position processes evenly at bottom
         float x = 200 + (processes.size() * HORIZONTAL_SPACING);
+        process.setListener(this);
         processes.add(new Process(x, downY, Color.RED));
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (gameOver) {
+            return true;
+        }
         float x = event.getX();
         float y = event.getY();
 
@@ -193,6 +203,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
         player.draw(canvas);
         drawFPS(canvas);
+
+        if (gameOver) {
+            drawGameOver(canvas);
+        }
     }
 
     public void drawFPS(Canvas canvas) {
@@ -211,8 +225,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 //        }
 //    }
 
+    private void drawGameOver(Canvas canvas) {
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.RED);
+        textPaint.setTextSize(100);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText("GAME OVER", canvas.getWidth() / 2f, canvas.getHeight() / 2f, textPaint);
+    }
+
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
     public void update() {
+        if (gameOver) return;
         player.update();
         Iterator<Process> iterator = processes.iterator();
         while (iterator.hasNext()) {
@@ -228,6 +251,20 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
                 iterator.remove(); // remove from the list
             }
         }
+    }
+
+    @Override
+    public void onTimerFinished(Process process) {
+        // A timer on a red process has expired.
+        // Set game over and stop the game loop.
+        if (!process.isExecuting()) {
+            gameOver = true;
+//          // gameLoop.stopLoop();
+        }
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
 }

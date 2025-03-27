@@ -32,6 +32,16 @@ public class GameLoop extends Thread {
         start();
     }
 
+    // Stop game loop - end the game
+    public void stopLoop() {
+        isRunning = false;
+        try {
+            join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void run() {
         super.run();
@@ -51,7 +61,10 @@ public class GameLoop extends Thread {
             try {
                 canvas = surfaceHolder.lockCanvas();
                 synchronized(surfaceHolder) {
-                    game.update();
+                    // Stop updating game screen if game is over
+                    if (!game.isGameOver()) {
+                        game.update();
+                    }
                     updateCount++;
                     game.draw(canvas);
                 }
@@ -85,7 +98,10 @@ public class GameLoop extends Thread {
 
             // Skip frames to keep up with target UPS
             while (sleepTime < 0 && updateCount < MAX_UPS - 1)  {
-                game.update();
+                if (!game.isGameOver()) {
+                    game.update();
+                }
+//                game.update();
                 updateCount++;
                 elapsedTime = System.currentTimeMillis() - startTime;
                 sleepTime = (long) (updateCount * UPS_PERIOD - elapsedTime);

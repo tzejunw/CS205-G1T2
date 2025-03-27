@@ -2,6 +2,7 @@ package com.example.cs205_g1t2;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Color;
 
 public class Process {
     private static int nextId = 1;
@@ -19,6 +20,16 @@ public class Process {
 
     private long executionStartTime;
     private long duration = 5000; // default 5 seconds execution
+    // New fields for pending (red) processes.
+    private final long creationTime;
+    private static final long PENDING_DURATION = 20000; // time allowed in red area
+
+    private ProcessListener listener;
+
+    // Implemented by Game
+    public interface ProcessListener {
+        void onTimerFinished(Process process);
+    }
 
     public Process(float x, float y, int color) {
         this.x = x;
@@ -29,8 +40,14 @@ public class Process {
         this.processId = nextId++;
         this.label = "P" + processId;
 
+        this.creationTime = System.currentTimeMillis();
+
         paint = new Paint();
         paint.setColor(color);
+    }
+
+    public void setListener(ProcessListener listener) {
+        this.listener = listener;
     }
 
     public void draw(Canvas canvas) {
@@ -66,6 +83,21 @@ public class Process {
             float right = x + radius - 8;
             float bottom = y + radius - 8;
 
+            canvas.drawArc(left, top, right, bottom, -90, 360 * progress, false, arcPaint);
+        }
+
+        // Draw execution progress arc for red processes before they expire
+        else if (!executing && !completed && paint.getColor() == Color.RED) {
+            long elapsed = System.currentTimeMillis() - creationTime;
+            float progress = Math.min(1f, (float) elapsed / PENDING_DURATION);
+            Paint arcPaint = new Paint();
+            arcPaint.setStyle(Paint.Style.STROKE);
+            arcPaint.setStrokeWidth(6);
+            // Use red for pending progress
+            float left = x - radius + 8;
+            float top = y - radius + 8;
+            float right = x + radius - 8;
+            float bottom = y + radius - 8;
             canvas.drawArc(left, top, right, bottom, -90, 360 * progress, false, arcPaint);
         }
 
@@ -111,11 +143,23 @@ public class Process {
     }
 
     public void update() {
+        long currentTime = System.currentTimeMillis();
+        // If not executing (red) and not already completed, check pending time.
+        if (!executing && !completed) {
+            if (currentTime - creationTime >= PENDING_DURATION) {
+                if (listener != null) {
+                    listener.onTimerFinished(this);
+                }
+            }
+        }
         if (executing && !completed) {
             long elapsed = System.currentTimeMillis() - executionStartTime;
             if (elapsed >= duration) {
                 completed = true;
                 paint.setColor(0xFF00FF00); // turn green when done
+                if (listener != null) {
+                    listener.onTimerFinished(this);
+                }
             }
         }
     }
