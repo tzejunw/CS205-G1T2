@@ -43,6 +43,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final Process[] occupiedSlots = new Process[4]; // Track slot usage
     private boolean gameOver = false;
 
+    private long lastProcessSpawnTime = System.currentTimeMillis();
+    private static final long PROCESS_SPAWN_INTERVAL = 5000; // every 5 seconds
+
     public Game(Context context) {
         super(context);
         SurfaceHolder surfaceHolder = getHolder();
@@ -251,6 +254,22 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 iterator.remove(); // remove from the list
             }
         }
+
+        // Auto-spawn new process every few seconds
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastProcessSpawnTime >= PROCESS_SPAWN_INTERVAL) {
+            spawnNewProcess();
+            lastProcessSpawnTime = currentTime;
+        }
+    }
+
+    private void spawnNewProcess() {
+        // Position new process at bottom in unused space
+        int count = processes.size();
+        float x = 100 + (count % 8) * 150; // Keep them within screen width
+        Process newProcess = new Process(x, downY, Color.RED);
+        newProcess.setListener(this);
+        processes.add(newProcess);
     }
 
     @Override
