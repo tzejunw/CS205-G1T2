@@ -31,6 +31,14 @@ public class Process {
         void onTimerFinished(Process process);
     }
 
+    public float getX() {
+        return this.x;
+    }
+
+    public float getY() {
+        return this.y;
+    }
+
     public Process(float x, float y, int color) {
         this.x = x;
         this.y = y;

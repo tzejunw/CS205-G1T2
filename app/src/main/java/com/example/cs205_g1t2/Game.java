@@ -291,14 +291,71 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
+//    private void spawnNewProcess() {
+//        // Position new process at bottom in unused space
+//        int count = processes.size();
+//        float x = 100 + (count % 8) * 150; // Keep them within screen width
+//        Process newProcess = new Process(x, downY, Color.RED);
+//        newProcess.setListener(this);
+//        processes.add(newProcess);
+//    }
+
+    private static final float PROCESS_RADIUS = 50; // Example radius
+    private static final float MIN_DISTANCE = 2 * PROCESS_RADIUS;
+    private static final float PROCESS_GAP = 25;
+
     private void spawnNewProcess() {
-        // Position new process at bottom in unused space
-        int count = processes.size();
-        float x = 100 + (count % 8) * 150; // Keep them within screen width
-        Process newProcess = new Process(x, downY, Color.RED);
-        newProcess.setListener(this);
-        processes.add(newProcess);
+        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        float screenWidth = metrics.widthPixels;
+        float horizontalPadding = 100;
+
+        // Grid configuration
+        float availableWidth = screenWidth - 2 * horizontalPadding;
+        int processesPerRow = (int) (availableWidth / MIN_DISTANCE);
+        processesPerRow = Math.max(processesPerRow, 1); // Ensure at least 1 per row
+        float horizontalSpacing = availableWidth / processesPerRow;
+
+        // Initial position calculation
+        int totalProcesses = processes.size();
+        int row = totalProcesses / processesPerRow;
+        float x = horizontalPadding + (totalProcesses % processesPerRow) * horizontalSpacing;
+        float y = downY - (row * MIN_DISTANCE);
+
+        // Collision detection and repositioning
+        boolean positionValid = false;
+        int maxAttempts = 10;
+
+        for(int attempt = 0; attempt < maxAttempts && !positionValid; attempt++) {
+            positionValid = true;
+            float MIN_SEPARATION = 2 * PROCESS_RADIUS + PROCESS_GAP;
+
+            // Broad-phase check using spatial partitioning
+            for(Process p : processes) {
+                float dx = x - p.getX();
+                float dy = y - p.getY();
+                float distanceSq = dx*dx + dy*dy; // Using squared distance
+
+                if(distanceSq < MIN_SEPARATION * MIN_SEPARATION) {
+                    positionValid = false;
+
+                    // Reposition to next grid slot
+                    x += horizontalSpacing;
+                    if(x > screenWidth - horizontalPadding - PROCESS_RADIUS) {
+                        x = horizontalPadding;
+                        y -= MIN_DISTANCE;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if(positionValid) {
+            Process newProcess = new Process(x, y, Color.RED);
+            newProcess.setListener(this);
+            processes.add(newProcess);
+        }
     }
+
 
     @Override
     public void onTimerFinished(Process process) {
@@ -324,7 +381,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
 
         // Reset player position
-        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        Context context = getContext();
+        if(context == null) {
+            return;
+        }
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         player.setPosition(metrics.widthPixels/2f, metrics.heightPixels/2f);
 
         // Recreate initial processes
