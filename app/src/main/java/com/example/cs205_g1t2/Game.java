@@ -7,6 +7,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -46,6 +51,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     private long lastProcessSpawnTime = System.currentTimeMillis();
     private static final long PROCESS_SPAWN_INTERVAL = 5000; // every 5 seconds
+
+    // In Game class variables
+    private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
+    private static final long BLOCK_DURATION = 5000; // 5 seconds block
+    private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
+
 
     public Game(Context context) {
         super(context);
@@ -163,11 +174,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         } else {
             // Find first empty slot
             for(int i = 0; i < occupiedSlots.length; i++) {
-                if(occupiedSlots[i] == null) {
-                    process.moveToExecution(
-                            executionSlots[i].x,
-                            executionSlots[i].y
-                    );
+                if(occupiedSlots[i] == null && !blockedSlots[i]) {
+                    process.moveToExecution(executionSlots[i].x, executionSlots[i].y);
                     occupiedSlots[i] = process;
                     break;
                 }
@@ -219,6 +227,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         player.draw(canvas);
         drawFPS(canvas);
 
+        // In draw() method
+        for(int i = 0; i < executionSlots.length; i++) {
+            if(blockedSlots[i]) {
+                slotPaint.setColor(Color.argb(150, 255, 0, 0)); // Red with transparency
+            } else {
+                slotPaint.setColor(Color.argb(50, 0, 255, 0)); // Original green
+            }
+            canvas.drawCircle(executionSlots[i].x, executionSlots[i].y, 60, slotPaint);
+        }
+
+
         if (gameOver) {
             drawGameOver(canvas);
         }
@@ -267,29 +286,53 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
     public void update() {
         if (gameOver) return;
+
+        // Existing process updates
         player.update();
         Iterator<Process> iterator = processes.iterator();
         while (iterator.hasNext()) {
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
-                // Also clear its execution slot
                 for (int i = 0; i < occupiedSlots.length; i++) {
                     if (occupiedSlots[i] == p) {
                         occupiedSlots[i] = null;
                     }
                 }
-                iterator.remove(); // remove from the list
+                iterator.remove();
             }
         }
 
-        // Auto-spawn new process every few seconds
+        // New slot blocking logic
+        if (Math.random() < BLOCK_CHANCE) {
+            int slot = (int) (Math.random() * 4);
+            if (!blockedSlots[slot]) {
+                blockedSlots[slot] = true;
+
+                // Vibration code
+                Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+                if (vibrator != null && vibrator.hasVibrator()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+                    } else {
+                        vibrator.vibrate(50); // Legacy vibration
+                    }
+                }
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    blockedSlots[slot] = false;
+                }, BLOCK_DURATION);
+            }
+        }
+
+        // Existing process spawning
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastProcessSpawnTime >= PROCESS_SPAWN_INTERVAL) {
             spawnNewProcess();
             lastProcessSpawnTime = currentTime;
         }
     }
+
 
 //    private void spawnNewProcess() {
 //        // Position new process at bottom in unused space
@@ -407,6 +450,5 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             gameLoop.startLoop();
         }
     }
-
 
 }
