@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,21 +16,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Set fullscreen before setting content view
+        // Fullscreen setup (keep existing)
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
 
-        // Initialize game first
-        game = new Game(this);
+        setContentView(R.layout.activity_main); // Set menu layout
 
-        // Create sample processes
-        createSampleProcesses();
-
-        // Set game view after process creation
-        setContentView(game);
+        // Play button click handler
+        findViewById(R.id.btn_play).setOnClickListener(v -> {
+            startActivity(new Intent(this, GameActivity.class));
+        });
     }
 
     public void restartGame() {

@@ -9,16 +9,26 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Cs205g1t2"
         tools:targetApi="31">
+
+        <!-- MainActivity (Menu) -->
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="landscape"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- GameActivity (Game) -->
+        <activity
+            android:name=".GameActivity"
+            android:screenOrientation="landscape"
+            android:exported="false">
+            <!-- No intent-filter here; it's launched from MainActivity -->
+        </activity>
+
     </application>
 
 </manifest>
