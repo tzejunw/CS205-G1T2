@@ -1,5 +1,6 @@
 package com.example.cs205_g1t2;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Window;
@@ -29,6 +30,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Set game view after process creation
         setContentView(game);
+    }
+
+    public void restartGame() {
+        finish();
+        startActivity(new Intent(this, MainActivity.class));
+        overridePendingTransition(0, 0);
     }
 
     private void createSampleProcesses() {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -93,7 +94,18 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (gameOver) {
-            return true;
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                int x = (int) event.getX();
+                int y = (int) event.getY();
+
+                // Check if restart button is pressed
+                if (x > getWidth()/2 - 200 && x < getWidth()/2 + 200 &&
+                        y > getHeight()/2 && y < getHeight()/2 + 150) {
+                    resetGame();
+                    return true;
+                }
+            }
+            return true; // Consume all touches when game over
         }
         float x = event.getX();
         float y = event.getY();
@@ -233,7 +245,23 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         textPaint.setColor(Color.RED);
         textPaint.setTextSize(100);
         textPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText("GAME OVER", canvas.getWidth() / 2f, canvas.getHeight() / 2f, textPaint);
+        canvas.drawText("GAME OVER", canvas.getWidth()/2f, canvas.getHeight()/2f - 100, textPaint);
+
+        // Draw restart button
+        Paint buttonPaint = new Paint();
+        buttonPaint.setColor(Color.BLUE);
+        Rect restartButton = new Rect(
+                canvas.getWidth()/2 - 200,
+                canvas.getHeight()/2,
+                canvas.getWidth()/2 + 200,
+                canvas.getHeight()/2 + 150
+        );
+        canvas.drawRect(restartButton, buttonPaint);
+
+        // Button text
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(60);
+        canvas.drawText("RESTART", canvas.getWidth()/2f, canvas.getHeight()/2 + 90, textPaint);
     }
 
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
@@ -285,5 +313,39 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     public boolean isGameOver() {
         return gameOver;
     }
+
+    public void resetGame() {
+        gameOver = false;
+
+        // Reset processes
+        processes.clear();
+        for(int i = 0; i < occupiedSlots.length; i++) {
+            occupiedSlots[i] = null;
+        }
+
+        // Reset player position
+        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        player.setPosition(metrics.widthPixels/2f, metrics.heightPixels/2f);
+
+        // Recreate initial processes
+        float startX = 100;
+        float spacing = (metrics.widthPixels - 200) / 7;
+        for(int i = 0; i < 8; i++) {
+            Process p = new Process(
+                    startX + (i * spacing),
+                    metrics.heightPixels - 200,
+                    Color.RED
+            );
+            p.setListener(this);
+            processes.add(p);
+        }
+
+        // Restart game loop if needed
+        if (!gameLoop.isAlive()) {
+            gameLoop = new GameLoop(this, getHolder());
+            gameLoop.startLoop();
+        }
+    }
+
 
 }
