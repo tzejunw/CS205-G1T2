@@ -24,23 +24,23 @@ public class GameActivity extends AppCompatActivity {
 
         // Move original MainActivity code here
         game = new Game(this);
-        createSampleProcesses();
+//        createSampleProcesses();
         setContentView(game);
     }
 
     // Move process creation from original MainActivity
-    private void createSampleProcesses() {
-        game.post(() -> {
-            int centerX = game.getWidth() / 2;
-            int centerY = game.getHeight() / 2;
-
-            Process p1 = new Process(centerX - 200, centerY, Color.rgb(255, 87, 51));
-            Process p2 = new Process(centerX + 200, centerY, Color.rgb(92, 107, 192));
-
-            game.addProcess(p1);
-            game.addProcess(p2);
-        });
-    }
+//    private void createSampleProcesses() {
+//        game.post(() -> {
+//            int centerX = game.getWidth() / 2;
+//            int centerY = game.getHeight() / 2;
+//
+//            Process p1 = new Process(centerX - 200, centerY, Color.rgb(255, 87, 51));
+//            Process p2 = new Process(centerX + 200, centerY, Color.rgb(92, 107, 192));
+//
+//            game.addProcess(p1);
+//            game.addProcess(p2);
+//        });
+//    }
 
     public void restartGame() {
         finish();

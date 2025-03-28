@@ -56,6 +56,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
+    private static final int MAX_PROCESSES = 12;
 
 
     public Game(Context context) {
@@ -227,6 +228,31 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         player.draw(canvas);
         drawFPS(canvas);
 
+        // Count waiting (red) processes
+        int waitingCount = 0;
+        for (Process p : processes) {
+            if (!p.isExecuting()) {
+                waitingCount++;
+            }
+        }
+
+        Paint waitingCountPaint = new Paint();
+        waitingCountPaint.setColor(Color.WHITE);
+        waitingCountPaint.setTextSize(50);
+        canvas.drawText("Waiting: " + waitingCount, 100, 100, waitingCountPaint);
+
+        int runningCount = 0;
+        for (Process p : processes) {
+            if (p.isExecuting()) {
+                runningCount++;
+            }
+        }
+        Paint runningPaint = new Paint();
+        runningPaint.setColor(Color.GREEN);
+        runningPaint.setTextSize(50);
+        canvas.drawText("Running: " + runningCount, 100, 160, runningPaint);
+
+
         // In draw() method
         for(int i = 0; i < executionSlots.length; i++) {
             if(blockedSlots[i]) {
@@ -348,6 +374,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final float PROCESS_GAP = 25;
 
     private void spawnNewProcess() {
+
+        if (processes.size() >= MAX_PROCESSES) {
+            return; // Do not spawn more than allowed
+        }
+
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float screenWidth = metrics.widthPixels;
         float horizontalPadding = 100;
