@@ -57,6 +57,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
 
+    private List<Resource> resources = new ArrayList<>();
+    private Resource selectedResource = null;
+    private static final int RESOURCES_PER_TYPE = 5;
+
+    private static final int MAX_PROCESSES = 8; // Maximum number of processes allowed
 
     public Game(Context context) {
         super(context);
@@ -70,29 +75,40 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         downY = metrics.heightPixels - 200; // 200px from bottom
 
-        // Initialize target positions
-        // Create 8 processes at bottom
-        float startX = 100;
-        float spacing = (metrics.widthPixels - 200) / 7;
-        for(int i = 0; i < 8; i++) {
-            Process p = new Process(
-                    startX + (i * spacing),
-                    metrics.heightPixels - 200,
-                    Color.RED
-            );
-            // Set the game as listener for timer finish events
-            p.setListener(this);
-            processes.add(p);
-        }
-
-
+        createResources();
 
         gameLoop = new GameLoop(this, surfaceHolder);
         player = new Player(getContext(), metrics.widthPixels/2f, metrics.heightPixels/2f, 30);
         setFocusable(true);
 
+    }
 
+    private void createResources() {
+        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+        float screenWidth = metrics.widthPixels;
+        float screenHeight = metrics.heightPixels;
 
+        // Add CPU resources (blue) on left side
+        float startX = 100;
+        float bottomY = screenHeight - 350;
+        float spacing = 160f;
+
+        for (int i = 0; i < RESOURCES_PER_TYPE; i++) {
+            Resource cpuResource = new Resource(getContext(), Resource.Type.CPU,
+                    startX + (i % 3) * spacing,
+                    bottomY - (i / 3) * spacing);
+            resources.add(cpuResource);
+        }
+
+        // Add Memory resources (green) on right side
+        startX = screenWidth - 1600;
+
+        for (int i = 0; i < RESOURCES_PER_TYPE; i++) {
+            Resource memoryResource = new Resource(getContext(), Resource.Type.MEMORY,
+                    startX + (i % 3) * spacing,
+                    bottomY - (i / 3) * spacing);
+            resources.add(memoryResource);
+        }
     }
 
     public void addProcess(Process process) {
@@ -125,31 +141,59 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             case MotionEvent.ACTION_DOWN:
                 initialTouchX = x;
                 initialTouchY = y;
-                selectedProcess = getProcessAt(x, y);
-                if (selectedProcess != null) {
-                    selectedProcess.setSelected(true);
+
+                // Check for resource selection first
+                selectedResource = getResourceAt(x, y);
+
+                if (selectedResource != null) {
+                    selectedResource.setSelected(true);
                 } else {
-                    player.setPosition(x, y);
+                    // Then check for process selection
+                    selectedProcess = getProcessAt(x, y);
+                    if (selectedProcess != null) {
+                        selectedProcess.setSelected(true);
+                    }
                 }
                 return true;
 
             case MotionEvent.ACTION_MOVE:
-                if (selectedProcess == null) {
-                    player.setPosition(x, y);
+                if (selectedResource != null) {
+                    selectedResource.setPosition(x, y);
+                } else if (selectedProcess != null) {
+                    // Keep existing process movement code
                 }
                 return true;
 
             case MotionEvent.ACTION_UP:
-                if (selectedProcess != null) {
-                    if (isClick(x, y)) {
-                        moveProcessToTarget(selectedProcess);
+                if (selectedResource != null) {
+                    Process targetProcess = getProcessAt(x, y);
+                    if (targetProcess != null) {
+                        if (targetProcess.allocateResource(selectedResource)) {
+                            selectedResource.setAllocated(true);
+                        } else {
+                            selectedResource.resetPosition();
+                        }
+                    } else {
+                        selectedResource.resetPosition();
                     }
-                    selectedProcess.setSelected(false);
-                    selectedProcess = null;
+
+                    selectedResource.setSelected(false);
+                    selectedResource = null;
+                } else if (selectedProcess != null) {
+                    // Keep existing process release code
                 }
                 return true;
         }
         return super.onTouchEvent(event);
+    }
+
+    private Resource getResourceAt(float x, float y) {
+        for (Resource resource : resources) {
+            if (!resource.isAllocated() && resource.contains(x, y)) {
+                return resource;
+            }
+        }
+        return null;
     }
 
     private boolean isClick(float x, float y) {
@@ -212,31 +256,18 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         super.draw(canvas);
         canvas.drawColor(Color.BLACK);
 
-        // Draw execution slots
-        Paint slotPaint = new Paint();
-        slotPaint.setColor(Color.argb(50, 0, 255, 0));
-        for(PointF pos : executionSlots) {
-            canvas.drawCircle(pos.x, pos.y, 60, slotPaint);
-        }
-
         // Draw processes
         for(Process p : processes) {
-            p.getPaint().setColor(p.isExecuting() ? Color.GREEN : Color.RED);
             p.draw(canvas);
         }
-        player.draw(canvas);
-        drawFPS(canvas);
 
-        // In draw() method
-        for(int i = 0; i < executionSlots.length; i++) {
-            if(blockedSlots[i]) {
-                slotPaint.setColor(Color.argb(150, 255, 0, 0)); // Red with transparency
-            } else {
-                slotPaint.setColor(Color.argb(50, 0, 255, 0)); // Original green
-            }
-            canvas.drawCircle(executionSlots[i].x, executionSlots[i].y, 60, slotPaint);
+        // Draw resources
+        for (Resource r : resources) {
+            r.draw(canvas);
         }
 
+        player.draw(canvas);
+        drawFPS(canvas);
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -294,11 +325,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
-                for (int i = 0; i < occupiedSlots.length; i++) {
-                    if (occupiedSlots[i] == p) {
-                        occupiedSlots[i] = null;
-                    }
-                }
+                p.resetAllocatedResources(); // Reset resources used by this process
                 iterator.remove();
             }
         }
@@ -333,24 +360,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-
-//    private void spawnNewProcess() {
-//        // Position new process at bottom in unused space
-//        int count = processes.size();
-//        float x = 100 + (count % 8) * 150; // Keep them within screen width
-//        Process newProcess = new Process(x, downY, Color.RED);
-//        newProcess.setListener(this);
-//        processes.add(newProcess);
-//    }
-
     private static final float PROCESS_RADIUS = 50; // Example radius
-    private static final float MIN_DISTANCE = 2 * PROCESS_RADIUS;
+    private static final float MIN_DISTANCE = 6 * PROCESS_RADIUS;
     private static final float PROCESS_GAP = 25;
 
     private void spawnNewProcess() {
+        if (processes.size() >= MAX_PROCESSES) {
+            return; // Don't spawn more processes if we've reached the limit
+        }
+
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float screenWidth = metrics.widthPixels;
-        float horizontalPadding = 100;
+        float horizontalPadding = 200;
+
+        // Top positioning - use a fixed Y value near the top
+        float topY = 100; // This places processes at the top of the screen
 
         // Grid configuration
         float availableWidth = screenWidth - 2 * horizontalPadding;
@@ -358,41 +382,49 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         processesPerRow = Math.max(processesPerRow, 1); // Ensure at least 1 per row
         float horizontalSpacing = availableWidth / processesPerRow;
 
-        // Initial position calculation
-        int totalProcesses = processes.size();
-        int row = totalProcesses / processesPerRow;
-        float x = horizontalPadding + (totalProcesses % processesPerRow) * horizontalSpacing;
-        float y = downY - (row * MIN_DISTANCE);
+        // Calculate X position based on existing processes at the top
+        int topProcessCount = 0;
+
+        for (Process p : processes) {
+            if (p.getY() < 150) { // Count only processes at the top
+                topProcessCount++;
+            }
+        }
+
+        // Calculate new position
+        float x = horizontalPadding + (topProcessCount % processesPerRow) * horizontalSpacing;
+        float y = topY;
 
         // Collision detection and repositioning
         boolean positionValid = false;
         int maxAttempts = 10;
 
-        for(int attempt = 0; attempt < maxAttempts && !positionValid; attempt++) {
+        for (int attempt = 0; attempt < maxAttempts && !positionValid; attempt++) {
             positionValid = true;
             float MIN_SEPARATION = 2 * PROCESS_RADIUS + PROCESS_GAP;
 
-            // Broad-phase check using spatial partitioning
-            for(Process p : processes) {
-                float dx = x - p.getX();
-                float dy = y - p.getY();
-                float distanceSq = dx*dx + dy*dy; // Using squared distance
+            // Check for collisions with other processes
+            for (Process p : processes) {
+                if (p.getY() < 150) { // Only check against top processes
+                    float dx = x - p.getX();
+                    float dy = y - p.getY();
+                    float distanceSq = dx*dx + dy*dy;
 
-                if(distanceSq < MIN_SEPARATION * MIN_SEPARATION) {
-                    positionValid = false;
+                    if (distanceSq < MIN_SEPARATION * MIN_SEPARATION) {
+                        positionValid = false;
+                        x += horizontalSpacing;
 
-                    // Reposition to next grid slot
-                    x += horizontalSpacing;
-                    if(x > screenWidth - horizontalPadding - PROCESS_RADIUS) {
-                        x = horizontalPadding;
-                        y -= MIN_DISTANCE;
+                        if (x > screenWidth - horizontalPadding - PROCESS_RADIUS) {
+                            x = horizontalPadding;
+                            y += MIN_DISTANCE; // Move to next row if needed
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
 
-        if(positionValid) {
+        if (positionValid) {
             Process newProcess = new Process(x, y, Color.RED);
             newProcess.setListener(this);
             processes.add(newProcess);
@@ -431,17 +463,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         player.setPosition(metrics.widthPixels/2f, metrics.heightPixels/2f);
 
-        // Recreate initial processes
-        float startX = 100;
-        float spacing = (metrics.widthPixels - 200) / 7;
-        for(int i = 0; i < 8; i++) {
-            Process p = new Process(
-                    startX + (i * spacing),
-                    metrics.heightPixels - 200,
-                    Color.RED
-            );
-            p.setListener(this);
-            processes.add(p);
+        for (Resource r : resources) {
+            r.resetPosition();
+            r.setAllocated(false);
         }
 
         // Restart game loop if needed
