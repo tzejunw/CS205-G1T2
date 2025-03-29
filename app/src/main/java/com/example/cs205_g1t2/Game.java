@@ -50,10 +50,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private boolean gameOver = false;
 
     private long lastProcessSpawnTime = System.currentTimeMillis();
-    private static final long PROCESS_SPAWN_INTERVAL = 5000; // every 5 seconds
 
     // In Game class variables
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
+
+    private static final long PROCESS_SPAWN_INTERVAL = 3000; // every 3 seconds
+
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
     private static final int MAX_PROCESSES = 12;
@@ -222,7 +224,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         // Draw processes
         for(Process p : processes) {
-            p.getPaint().setColor(p.isExecuting() ? Color.GREEN : Color.RED);
+//            p.getPaint().setColor(p.isExecuting() ? Color.GREEN : Color.RED);
+            if (p.isExecuting()) {
+                p.getPaint().setColor(Color.GREEN);
+            } else {
+                long elapsed = System.currentTimeMillis() - p.getCreationTime();
+                if (elapsed < p.getPendingDuration() / 2) {
+                    p.getPaint().setColor(Color.YELLOW);
+                } else {
+                    p.getPaint().setColor(Color.RED);
+                }
+            }
             p.draw(canvas);
         }
         player.draw(canvas);
@@ -351,9 +363,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
         }
 
+        int pendingCount = 0;
+        for (Process p : processes) {
+            if (!p.isExecuting() && !p.isCompleted()) {
+                pendingCount++;
+            }
+        }
+        long adjustedSpawnInterval = pendingCount < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
+
         // Existing process spawning
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastProcessSpawnTime >= PROCESS_SPAWN_INTERVAL) {
+        if (currentTime - lastProcessSpawnTime >= adjustedSpawnInterval) {
             spawnNewProcess();
             lastProcessSpawnTime = currentTime;
         }

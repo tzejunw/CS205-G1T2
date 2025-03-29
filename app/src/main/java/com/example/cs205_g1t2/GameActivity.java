@@ -42,10 +42,10 @@ public class GameActivity extends AppCompatActivity {
 //        });
 //    }
 
-    public void restartGame() {
-        finish();
-        startActivity(new Intent(this, GameActivity.class));
-        overridePendingTransition(0, 0);
-    }
+//    public void restartGame() {
+//        finish();
+//        startActivity(new Intent(this, GameActivity.class));
+//        overridePendingTransition(0, 0);
+//    }
 }
 
