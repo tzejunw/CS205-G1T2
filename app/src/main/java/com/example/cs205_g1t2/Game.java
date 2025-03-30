@@ -1,5 +1,6 @@
 package com.example.cs205_g1t2;
 
+import static android.os.SystemClock.setCurrentTimeMillis;
 import static android.os.SystemClock.sleep;
 
 import android.content.Context;
@@ -31,6 +32,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private ScoreManager scoreManager;
     private GameLoop gameLoop;
     private final List<Process> processes = new ArrayList<>();
+    private final List<PointF> overduePositions = new ArrayList<>();
+
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
     private static final float CLICK_THRESHOLD = 20f;
@@ -38,6 +41,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     // Position configuration
     private final PointF[] targetPositions;
     private int nextTargetIndex = 0;
+
+    private int winAmount = 10;
+
+    private int loseAmount = 30;
     private float downY;
     private static final float UP_Y = 200;
     private static final float HORIZONTAL_SPACING = 300;
@@ -244,6 +251,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         scoreManager.draw(canvas, canvas.getWidth());
 
+        // Draw the overdue message for each overdue process
+        for (PointF pos : overduePositions) {
+            drawMoneyChanges(canvas, pos.x, pos.y);
+        }
+        overduePositions.clear();
+
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -265,6 +278,16 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 //            p.update();
 //        }
 //    }
+
+    public void drawMoneyChanges(Canvas canvas, float x, float y){
+            Paint textPaint = new Paint();
+            textPaint.setColor(Color.RED);       // Set text color to red
+            textPaint.setTextSize(50);           // Set text size
+            textPaint.setTextAlign(Paint.Align.CENTER);  // Align text to center
+            String message = "-S" + loseAmount;
+            canvas.drawText(message, x, y , textPaint);
+
+    }
 
     private void drawGameOver(Canvas canvas) {
         Paint textPaint = new Paint();
@@ -299,6 +322,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     public void update() {
         if (gameOver) return;
 
+        if (scoreManager.getScore() <= 0) {
+            gameOver = true;
+        }
+
         // Existing process updates
         player.update();
         Iterator<Process> iterator = processes.iterator();
@@ -306,12 +333,20 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
-                scoreManager.addScore(100);
+                scoreManager.addScore(winAmount);
                 for (int i = 0; i < occupiedSlots.length; i++) {
                     if (occupiedSlots[i] == p) {
                         occupiedSlots[i] = null;
                     }
                 }
+                iterator.remove();
+            }
+
+            if(p.isOverdue()){
+                scoreManager.minusScore(loseAmount);
+                float x = p.getX();
+                float y = p.getY();
+                overduePositions.add(new PointF(x, y)); // store x,y to display the money changes after process is removed
                 iterator.remove();
             }
         }
@@ -413,14 +448,16 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     }
 
 
-    @Override
+    @Override /*this method can be removed; was originally used to
+    introduce gameover logic before moneysystem was implemented*/
     public void onTimerFinished(Process process) {
         // A timer on a red process has expired.
         // Set game over and stop the game loop.
-        if (!process.isExecuting()) {
-            gameOver = true;
-//          // gameLoop.stopLoop();
-        }
+
+        /*if (!process.isExecuting()) {
+          // gameOver = true;
+          // gameLoop.stopLoop();
+        }*/
     }
 
     public boolean isGameOver() {

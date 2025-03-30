@@ -10,7 +10,7 @@ public class ScoreManager {
     private Paint paint;
 
     public ScoreManager(Context context) {
-        score = 0;
+        score = 50;
         paint = new Paint();
         paint.setColor(Color.YELLOW);
         paint.setTextSize(60);
@@ -19,6 +19,10 @@ public class ScoreManager {
 
     public void addScore(int amount) {
         score += amount;
+    }
+
+    public void minusScore(int amount){
+        score -= amount;
     }
 
     // Reset the score to zero

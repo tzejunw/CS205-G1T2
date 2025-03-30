@@ -16,9 +16,12 @@ public class Process {
     private boolean executing = false;
     private boolean completed = false;
 
+    private boolean overdue = false;  //exceeded pending duration
+
     private float originalX, originalY;
 
     private long executionStartTime;
+
     private long duration = 5000; // default 5 seconds execution
     // New fields for pending (red) processes.
     private final long creationTime;
@@ -57,6 +60,7 @@ public class Process {
     public void setListener(ProcessListener listener) {
         this.listener = listener;
     }
+
 
     public void draw(Canvas canvas) {
         // Draw the process circle
@@ -135,6 +139,10 @@ public class Process {
         return completed;
     }
 
+    public boolean isOverdue() {
+        return overdue;
+    }
+
     public void moveToExecution(float execX, float execY) {
         this.x = execX;
         this.y = execY;
@@ -157,6 +165,7 @@ public class Process {
             if (currentTime - creationTime >= PENDING_DURATION) {
                 if (listener != null) {
                     listener.onTimerFinished(this);
+                    overdue = true;
                 }
             }
         }
