@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +28,7 @@ import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     private final Player player;
+    private ScoreManager scoreManager;
     private GameLoop gameLoop;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
@@ -60,6 +62,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     public Game(Context context) {
         super(context);
+
+        scoreManager = new ScoreManager(context);
+
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
@@ -237,6 +242,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             canvas.drawCircle(executionSlots[i].x, executionSlots[i].y, 60, slotPaint);
         }
 
+        scoreManager.draw(canvas, canvas.getWidth());
+
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -266,16 +273,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         textPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText("GAME OVER", canvas.getWidth()/2f, canvas.getHeight()/2f - 100, textPaint);
 
-        // Draw restart button
+        // Draw restart button styled like play button
         Paint buttonPaint = new Paint();
-        buttonPaint.setColor(Color.BLUE);
-        Rect restartButton = new Rect(
+        buttonPaint.setColor(Color.rgb(76, 187, 76)); // Green color matching play button
+        buttonPaint.setAntiAlias(true); // Smooth edges
+
+        // Create rounded rectangle for button
+        RectF restartButtonRect = new RectF(
                 canvas.getWidth()/2 - 200,
                 canvas.getHeight()/2,
                 canvas.getWidth()/2 + 200,
                 canvas.getHeight()/2 + 150
         );
-        canvas.drawRect(restartButton, buttonPaint);
+
+        // Draw rounded rectangle (40px corner radius)
+        canvas.drawRoundRect(restartButtonRect, 40, 40, buttonPaint);
 
         // Button text
         textPaint.setColor(Color.WHITE);
@@ -294,6 +306,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
+                scoreManager.addScore(100);
                 for (int i = 0; i < occupiedSlots.length; i++) {
                     if (occupiedSlots[i] == p) {
                         occupiedSlots[i] = null;
@@ -430,6 +443,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         player.setPosition(metrics.widthPixels/2f, metrics.heightPixels/2f);
+
+        // Reset score
+        scoreManager.resetScore();
 
         // Recreate initial processes
         float startX = 100;
