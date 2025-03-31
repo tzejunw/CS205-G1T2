@@ -118,7 +118,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         // Position processes evenly at bottom
         float x = 200 + (processes.size() * HORIZONTAL_SPACING);
         process.setListener(this);
-        processes.add(new Process(x, downY, Color.RED));
+        processes.add(new Process(getContext(), x, downY, Color.RED));
     }
 
     @Override
@@ -477,7 +477,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         float x = horizontalPadding + freeCol * horizontalSpacing;
         float y = topY;
 
-        Process newProcess = new Process(x, y, Color.GREEN);
+        Process newProcess = new Process(getContext(), x, y, Color.GREEN);
         newProcess.setListener(this);
         processes.add(newProcess);
 

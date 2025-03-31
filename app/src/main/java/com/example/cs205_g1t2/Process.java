@@ -1,5 +1,10 @@
 package com.example.cs205_g1t2;
 
+import java.io.IOException;
+import java.io.InputStream;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Color;
@@ -16,6 +21,8 @@ public class Process {
     private float x, y;
     private final float radius = 80f;
     private final Paint paint;
+    private Bitmap emojiHappy, emojiWorried, emojiPanic, emojiClock;
+    private final Context context;
     private boolean selected = false;
     private boolean executing = false;
     private boolean completed = false;
@@ -55,7 +62,8 @@ public class Process {
         return this.y;
     }
 
-    public Process(float x, float y, int color) {
+    public Process(Context context, float x, float y, int color) {
+        this.context = context;
         this.x = x;
         this.y = y;
         this.originalX = x;
@@ -70,6 +78,16 @@ public class Process {
         paint = new Paint();
         paint.setColor(color);
 
+        try {
+            emojiHappy = loadEmojiFromAssets("emoji_happy.png");
+            emojiWorried = loadEmojiFromAssets("emoji_worried.png");
+            emojiPanic = loadEmojiFromAssets("emoji_panic.png");
+            emojiClock = loadEmojiFromAssets("emoji_clock.png");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         requiredResources.put(Resource.Type.CPU, (int)(Math.random() * 2) + 1);  // 1-2 CPUs
         requiredResources.put(Resource.Type.MEMORY, (int)(Math.random() * 2) + 1);  // 1-2 Memory
 
@@ -77,6 +95,13 @@ public class Process {
         for (Resource.Type type : Resource.Type.values()) {
             allocatedResources.put(type, 0);
         }
+    }
+
+    private Bitmap loadEmojiFromAssets(String fileName) throws IOException {
+        InputStream inputStream = context.getAssets().open(fileName);
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        inputStream.close();
+        return bitmap;
     }
 
     // New methods for resource management
@@ -241,6 +266,29 @@ public class Process {
             float bottom = y + radius - 8;
             canvas.drawArc(left, top, right, bottom, -90, 360 * progress, false, arcPaint);
         }
+
+        Bitmap emoji = null;
+        if (executing && !completed) {
+            emoji = emojiClock;
+        } else {
+            long elapsed = System.currentTimeMillis() - creationTime;
+            if (elapsed < pendingDuration * 0.5f) {
+                emoji = emojiHappy;
+            } else if (elapsed < pendingDuration * 0.75f) {
+                emoji = emojiWorried;
+            } else {
+                emoji = emojiPanic;
+            }
+        }
+
+        if (emoji != null) {
+            float size = 40f;
+            float left = x + radius - size;
+            float top = y - radius;
+            RectF dst = new RectF(left, top, left + size, top + size);
+            canvas.drawBitmap(emoji, null, dst, null);
+        }
+
 
         // Draw label text
         Paint textPaint = new Paint();
