@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
             unbindService(connection);
             isBound = false;
         }
+        if (game != null) {
+            game.cleanup();
+        }
     }
 
     public void restartGame() {

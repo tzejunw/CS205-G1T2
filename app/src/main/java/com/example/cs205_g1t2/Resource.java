@@ -36,6 +36,11 @@ public class Resource {
     private Bitmap resourceImage;
     private Context context;
 
+    private boolean blocked = false;
+    private Bitmap originalBitmap;
+
+    private Bitmap bitmap;
+
     public Resource(Context context, Type type, float x, float y) {
         this.type = type;
         this.x = x;
@@ -102,6 +107,15 @@ public class Resource {
             border.setColor(0xFFFFFFFF);
             canvas.drawCircle(x, y, radius + 5, border);
         }
+
+        if (blocked) {
+            // Draw fire bitmap instead of normal resource
+            canvas.drawBitmap(bitmap, x - bitmap.getWidth()/2, y - bitmap.getHeight()/2, null);
+        }
+//        else {
+//            // Existing drawing code
+//            canvas.drawCircle(x, y, radius, paint);
+//        }
     }
 
     public boolean contains(float touchX, float touchY) {
@@ -135,6 +149,21 @@ public class Resource {
 
     public Type getType() {
         return type;
+    }
+
+    public void block(Bitmap fireBitmap) {
+        this.blocked = true;
+        this.originalBitmap = this.bitmap; // Save original bitmap
+        this.bitmap = fireBitmap;
+    }
+
+    public void unblock() {
+        this.blocked = false;
+        this.bitmap = originalBitmap;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
     }
 
     public float getX() { return x; }
