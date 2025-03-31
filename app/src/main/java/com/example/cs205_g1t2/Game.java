@@ -336,6 +336,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             if (!blockedSlots[slot]) {
                 blockedSlots[slot] = true;
 
+
                 // Vibration code
                 Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
                 if (vibrator != null && vibrator.hasVibrator()) {
