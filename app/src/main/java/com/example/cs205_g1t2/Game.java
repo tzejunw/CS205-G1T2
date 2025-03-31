@@ -50,10 +50,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private boolean gameOver = false;
 
     private long lastProcessSpawnTime = System.currentTimeMillis();
-    private static final long PROCESS_SPAWN_INTERVAL = 5000; // every 5 seconds
 
     // In Game class variables
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
+
+    private static final long PROCESS_SPAWN_INTERVAL = 3000; // every 3 seconds
+
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
 
@@ -259,6 +261,14 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         // Draw processes
         for(Process p : processes) {
             p.draw(canvas);
+            long elapsed = System.currentTimeMillis() - p.getCreationTime();
+            if (elapsed < p.getPendingDuration() / 2) {
+                p.getPaint().setColor(Color.GREEN);
+            } else if (elapsed < p.getPendingDuration() / 4) {
+                p.getPaint().setColor(Color.YELLOW);
+            } else {
+                p.getPaint().setColor(Color.RED);
+            }
         }
 
         // Draw resources
@@ -268,6 +278,44 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         player.draw(canvas);
         drawFPS(canvas);
+
+        // // Unnecessary code from max_process_req, temporarily leave here for reference
+//        // Count waiting (red) processes
+//        int waitingCount = 0;
+//        for (Process p : processes) {
+//            if (!p.isExecuting()) {
+//                waitingCount++;
+//            }
+//        }
+//
+//        Paint waitingCountPaint = new Paint();
+//        waitingCountPaint.setColor(Color.WHITE);
+//        waitingCountPaint.setTextSize(50);
+//        canvas.drawText("Waiting: " + waitingCount, 100, 100, waitingCountPaint);
+//
+//        int runningCount = 0;
+//        for (Process p : processes) {
+//            if (p.isExecuting()) {
+//                runningCount++;
+//            }
+//        }
+//        Paint runningPaint = new Paint();
+//        runningPaint.setColor(Color.GREEN);
+//        runningPaint.setTextSize(50);
+//        canvas.drawText("Running: " + runningCount, 100, 160, runningPaint);
+
+
+        // // Unnecessary code from max_process_req, temporarily leave here for reference
+        // - In draw() method
+//        for(int i = 0; i < executionSlots.length; i++) {
+//            if(blockedSlots[i]) {
+//                slotPaint.setColor(Color.argb(150, 255, 0, 0)); // Red with transparency
+//            } else {
+//                slotPaint.setColor(Color.argb(50, 0, 255, 0)); // Original green
+//            }
+//            canvas.drawCircle(executionSlots[i].x, executionSlots[i].y, 60, slotPaint);
+//        }
+
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -353,9 +401,18 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
         }
 
+        // Unnecessary code from max_process_req
+//        int pendingCount = 0;
+//        for (Process p : processes) {
+//            if (!p.isExecuting() && !p.isCompleted()) {
+//                pendingCount++;
+//            }
+//        }
+//        long adjustedSpawnInterval = pendingCount < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
+
         // Existing process spawning
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastProcessSpawnTime >= PROCESS_SPAWN_INTERVAL) {
+        if (currentTime - lastProcessSpawnTime >= adjustedSpawnInterval) {
             spawnNewProcess();
             lastProcessSpawnTime = currentTime;
         }

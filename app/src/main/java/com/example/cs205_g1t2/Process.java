@@ -23,10 +23,11 @@ public class Process {
     private float originalX, originalY;
 
     private long executionStartTime;
-    private long duration = 5000; // default 5 seconds execution
+    private long duration;
+    // default 5 seconds execution
     // New fields for pending (red) processes.
     private final long creationTime;
-    private static final long PENDING_DURATION = 20000; // time allowed in red area
+    private final long pendingDuration; // time allowed in red area
 
     private ProcessListener listener;
 
@@ -62,7 +63,8 @@ public class Process {
 
         this.processId = nextId++;
         this.label = "P" + processId;
-
+        this.duration = 5000 + (long) (Math.random() * 5000); // random duration between 5 and 10 seconds
+        this.pendingDuration = 10000 + (long)(Math.random() * 50000);
         this.creationTime = System.currentTimeMillis();
 
         paint = new Paint();
@@ -226,9 +228,9 @@ public class Process {
         }
 
         // Draw execution progress arc for red processes before they expire
-        else if (!executing && !completed && paint.getColor() == Color.RED) {
+        else if (!executing && !completed) {
             long elapsed = System.currentTimeMillis() - creationTime;
-            float progress = Math.min(1f, (float) elapsed / PENDING_DURATION);
+            float progress = Math.min(1f, (float) elapsed / pendingDuration);
             Paint arcPaint = new Paint();
             arcPaint.setStyle(Paint.Style.STROKE);
             arcPaint.setStrokeWidth(6);
@@ -242,7 +244,7 @@ public class Process {
 
         // Draw label text
         Paint textPaint = new Paint();
-        textPaint.setColor(0xFFFFFFFF); // white
+        textPaint.setColor(Color.BLACK); // white
         textPaint.setTextSize(30);
         textPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(label, x, y + 10, textPaint);
@@ -294,7 +296,7 @@ public class Process {
         long currentTime = System.currentTimeMillis();
         // If not executing (red) and not already completed, check pending time.
         if (!executing && !completed) {
-            if (currentTime - creationTime >= PENDING_DURATION) {
+            if (currentTime - creationTime >= pendingDuration) {
                 if (listener != null) {
                     listener.onTimerFinished(this);
                 }
@@ -314,6 +316,14 @@ public class Process {
 
     public Paint getPaint() {
         return paint;
+    }
+
+    public long getCreationTime() {
+        return creationTime;
+    }
+
+    public long getPendingDuration() {
+        return pendingDuration;
     }
 
     public int getProcessId() {
