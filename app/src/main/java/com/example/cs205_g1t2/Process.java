@@ -23,7 +23,7 @@ public class Process {
     private float originalX, originalY;
 
     private long executionStartTime;
-    private long duration;
+    private long executingDuration;
     // default 5 seconds execution
     // New fields for pending (red) processes.
     private final long creationTime;
@@ -63,8 +63,8 @@ public class Process {
 
         this.processId = nextId++;
         this.label = "P" + processId;
-        this.duration = 5000 + (long) (Math.random() * 5000); // random duration between 5 and 10 seconds
-        this.pendingDuration = 10000 + (long)(Math.random() * 50000);
+        this.executingDuration = 1000 + (long) (Math.random() * 5000); // random duration between 5 and 10 seconds
+        this.pendingDuration = 15000 + (long)(Math.random() * 5000);
         this.creationTime = System.currentTimeMillis();
 
         paint = new Paint();
@@ -207,7 +207,7 @@ public class Process {
         // Draw execution progress arc if executing
         if (executing && !completed) {
             long elapsed = System.currentTimeMillis() - executionStartTime;
-            float progress = Math.min(1f, (float) elapsed / duration);
+            float progress = Math.min(1f, (float) elapsed / executingDuration);
 
             Paint arcPaint = new Paint();
             arcPaint.setStyle(Paint.Style.STROKE);
@@ -304,7 +304,7 @@ public class Process {
         }
         if (executing && resourcesSatisfied && !completed) {
             long elapsed = System.currentTimeMillis() - executionStartTime;
-            if (elapsed >= duration) {
+            if (elapsed >= executingDuration) {
                 completed = true;
                 paint.setColor(0xFF00FF00); // turn green when done
                 if (listener != null) {
@@ -334,8 +334,8 @@ public class Process {
         return label;
     }
 
-    public void setDuration(long duration) {
-        this.duration = duration;
+    public void setDuration(long executingDuration) {
+        this.executingDuration = executingDuration;
     }
 
     // Add getters

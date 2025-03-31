@@ -36,7 +36,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     // Position configuration
     private final PointF[] targetPositions;
     private int nextTargetIndex = 0;
-    private float downY;
+    private final float downY;
     private static final float UP_Y = 200;
     private static final float HORIZONTAL_SPACING = 300;
     // Execution slots (4 positions, 2 processes each)
@@ -54,16 +54,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     // In Game class variables
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
 
-    private static final long PROCESS_SPAWN_INTERVAL = 3000; // every 3 seconds
+    private static final long PROCESS_SPAWN_INTERVAL = 3500; // every 3.5 seconds
 
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
 
-    private List<Resource> resources = new ArrayList<>();
+    private final List<Resource> resources = new ArrayList<>();
     private Resource selectedResource = null;
     private static final int RESOURCES_PER_TYPE = 5;
 
     private static final int MAX_PROCESSES = 8; // Maximum number of processes allowed
+    private int topProcessCount = 0; // Count of processes at the top
 
     public Game(Context context) {
         super(context);
@@ -259,17 +260,22 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         canvas.drawColor(Color.BLACK);
 
         // Draw processes
-        for(Process p : processes) {
-            p.draw(canvas);
-            long elapsed = System.currentTimeMillis() - p.getCreationTime();
-            if (elapsed < p.getPendingDuration() / 2) {
-                p.getPaint().setColor(Color.GREEN);
-            } else if (elapsed < p.getPendingDuration() / 4) {
-                p.getPaint().setColor(Color.YELLOW);
-            } else {
-                p.getPaint().setColor(Color.RED);
-            }
-        }
+         for(Process p : processes) {
+             p.draw(canvas);
+             long elapsed = System.currentTimeMillis() - p.getCreationTime();
+             long pendingDuration = p.getPendingDuration();
+
+             if (p.isExecuting()) {
+                 p.getPaint().setColor(Color.CYAN);
+             }
+             else if (elapsed < pendingDuration * 0.5) {
+                 p.getPaint().setColor(Color.GREEN);
+             } else if (elapsed < pendingDuration * 0.75) {
+                 p.getPaint().setColor(Color.YELLOW);
+             } else {
+                 p.getPaint().setColor(Color.RED);
+             }
+         }
 
         // Draw resources
         for (Resource r : resources) {
@@ -279,7 +285,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         player.draw(canvas);
         drawFPS(canvas);
 
-        // // Unnecessary code from max_process_req, temporarily leave here for reference
+        // // Unused code from max_process_req, temporarily leave here for reference
 //        // Count waiting (red) processes
 //        int waitingCount = 0;
 //        for (Process p : processes) {
@@ -305,7 +311,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 //        canvas.drawText("Running: " + runningCount, 100, 160, runningPaint);
 
 
-        // // Unnecessary code from max_process_req, temporarily leave here for reference
+        // // Unused code from max_process_req, temporarily leave here for reference
         // - In draw() method
 //        for(int i = 0; i < executionSlots.length; i++) {
 //            if(blockedSlots[i]) {
@@ -401,14 +407,15 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
         }
 
-        // Unnecessary code from max_process_req
+        // Unnecessary code from max_process_req - temporarily leave here for reference
 //        int pendingCount = 0;
 //        for (Process p : processes) {
 //            if (!p.isExecuting() && !p.isCompleted()) {
 //                pendingCount++;
 //            }
 //        }
-//        long adjustedSpawnInterval = pendingCount < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
+
+        long adjustedSpawnInterval = processes.size() < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
 
         // Existing process spawning
         long currentTime = System.currentTimeMillis();
@@ -419,7 +426,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     }
 
     private static final float PROCESS_RADIUS = 50; // Example radius
-    private static final float MIN_DISTANCE = 6 * PROCESS_RADIUS;
+    private static final float MIN_DISTANCE = 5 * PROCESS_RADIUS;
     private static final float PROCESS_GAP = 25;
 
     private void spawnNewProcess() {
@@ -429,7 +436,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float screenWidth = metrics.widthPixels;
-        float horizontalPadding = 200;
+        float horizontalPadding = 150;
 
         // Top positioning - use a fixed Y value near the top
         float topY = 100; // This places processes at the top of the screen
@@ -440,53 +447,41 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         processesPerRow = Math.max(processesPerRow, 1); // Ensure at least 1 per row
         float horizontalSpacing = availableWidth / processesPerRow;
 
-        // Calculate X position based on existing processes at the top
-        int topProcessCount = 0;
+        boolean[] occupied = new boolean[processesPerRow];
 
         for (Process p : processes) {
-            if (p.getY() < 150) { // Count only processes at the top
-                topProcessCount++;
-            }
-        }
-
-        // Calculate new position
-        float x = horizontalPadding + (topProcessCount % processesPerRow) * horizontalSpacing;
-        float y = topY;
-
-        // Collision detection and repositioning
-        boolean positionValid = false;
-        int maxAttempts = 10;
-
-        for (int attempt = 0; attempt < maxAttempts && !positionValid; attempt++) {
-            positionValid = true;
-            float MIN_SEPARATION = 2 * PROCESS_RADIUS + PROCESS_GAP;
-
-            // Check for collisions with other processes
-            for (Process p : processes) {
-                if (p.getY() < 150) { // Only check against top processes
-                    float dx = x - p.getX();
-                    float dy = y - p.getY();
-                    float distanceSq = dx*dx + dy*dy;
-
-                    if (distanceSq < MIN_SEPARATION * MIN_SEPARATION) {
-                        positionValid = false;
-                        x += horizontalSpacing;
-
-                        if (x > screenWidth - horizontalPadding - PROCESS_RADIUS) {
-                            x = horizontalPadding;
-                            y += MIN_DISTANCE; // Move to next row if needed
-                        }
-                        break;
-                    }
+            // Use a small threshold to determine if the process is in the top row.
+            if (Math.abs(p.getY() - topY) < 10) {
+                // Calculate the column index based on its x position.
+                int col = (int) ((p.getX() - horizontalPadding + horizontalSpacing/2) / horizontalSpacing);
+                if (col >= 0 && col < processesPerRow) {
+                    occupied[col] = true;
                 }
             }
         }
 
-        if (positionValid) {
-            Process newProcess = new Process(x, y, Color.RED);
-            newProcess.setListener(this);
-            processes.add(newProcess);
+        // Find the first free column.
+        int freeCol = -1;
+        for (int i = 0; i < processesPerRow; i++) {
+            if (!occupied[i]) {
+                freeCol = i;
+                break;
+            }
         }
+
+        if (freeCol == -1) {
+            // All top-row spots are occupied; do not spawn a new process.
+            return;
+        }
+
+        float x = horizontalPadding + freeCol * horizontalSpacing;
+        float y = topY;
+
+        Process newProcess = new Process(x, y, Color.GREEN);
+        newProcess.setListener(this);
+        processes.add(newProcess);
+
+
     }
 
 
@@ -509,7 +504,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         // Reset processes
         processes.clear();
-        for(int i = 0; i < occupiedSlots.length; i++) {
+        for (int i = 0; i < occupiedSlots.length; i++) {
             occupiedSlots[i] = null;
         }
 
