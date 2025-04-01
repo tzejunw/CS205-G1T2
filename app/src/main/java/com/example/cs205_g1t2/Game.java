@@ -21,6 +21,8 @@ import android.graphics.Paint;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
+import com.example.cs205_g1t2.leaderboard.LeaderboardDbHelper;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -370,7 +372,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
     public void update() {
-        if (gameOver) return;
+        if (gameOver) {
+            LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(getContext());
+            dbHelper.insertRecord(0); // todo: change this to score once done
+            return;
+        }
 
         // Existing process updates
         player.update();
