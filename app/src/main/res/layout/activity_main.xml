@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:background="@android:color/black">
+    android:background="@drawable/main_background">
 
     <Button
         android:id="@+id/btn_play"
