@@ -60,15 +60,15 @@ public class GameLoop extends Thread {
             // Try to update and render game
             try {
                 canvas = surfaceHolder.lockCanvas();
-                synchronized(surfaceHolder) {
-                    // Stop updating game screen if game is over
-                    if (!game.isGameOver()) {
-                        game.update();
+                if (canvas != null) {  // Add this check
+                    synchronized(surfaceHolder) {
+                        if (!game.isGameOver()) {
+                            game.update();
+                        }
+                        updateCount++;
+                        game.draw(canvas);
                     }
-                    updateCount++;
-                    game.draw(canvas);
                 }
-
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             } finally {

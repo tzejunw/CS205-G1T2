@@ -2,6 +2,7 @@ package com.example.cs205_g1t2;
 
 import static android.os.SystemClock.sleep;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,6 +14,7 @@ import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -29,7 +31,7 @@ import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     private final Player player;
-    private GameLoop gameLoop;
+    public GameLoop gameLoop;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
@@ -497,6 +499,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         // Set game over and stop the game loop.
         if (!process.isExecuting()) {
             gameOver = true;
+            returnToMainMenu();
 //          // gameLoop.stopLoop();
         }
     }
@@ -531,6 +534,16 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         if (!gameLoop.isAlive()) {
             gameLoop = new GameLoop(this, getHolder());
             gameLoop.startLoop();
+        }
+    }
+
+    private void returnToMainMenu() {
+        // Get reference to the activity context
+        Context context = getContext();
+        if (context instanceof GameActivity) {
+            // the thread has not ended yet
+            gameOver = true;
+            ((Activity) getContext()).finish();
         }
     }
 
