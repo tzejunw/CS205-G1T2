@@ -14,6 +14,7 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cs205_g1t2.leaderboard.LeaderboardActivity;
+import com.example.cs205_g1t2.leaderboard.LeaderboardDbHelper;
 
 public class MainActivity extends AppCompatActivity {
     private Game game;

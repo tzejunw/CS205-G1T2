@@ -1,6 +1,7 @@
 package com.example.cs205_g1t2.leaderboard;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
@@ -55,4 +56,18 @@ public class LeaderboardDbHelper extends SQLiteOpenHelper {
         db.close();
         return id;
     }
+
+    public boolean tableExists() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                new String[]{TABLE_LEADERBOARD}
+        );
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
+
+
 }
