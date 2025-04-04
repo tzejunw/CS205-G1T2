@@ -375,8 +375,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
     public void update() {
         if (gameOver) {
-            LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(getContext());
-            dbHelper.insertRecord(0); // todo: change this to score once done
             return;
         }
 
@@ -541,8 +539,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         // Get reference to the activity context
         Context context = getContext();
         if (context instanceof GameActivity) {
-            // the thread has not ended yet
             gameOver = true;
+
+            LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
+            dbHelper.insertRecord(999); // todo: change this to score once done
+
             ((Activity) getContext()).finish();
         }
     }
