@@ -1,7 +1,6 @@
 package com.example.cs205_g1t2.leaderboard;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -10,8 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import com.example.cs205_g1t2.MainActivity;
 import com.example.cs205_g1t2.R;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +16,7 @@ import java.util.List;
 public class LeaderboardActivity extends Activity {
 
     private ListView listView;
-    private Button btnNext, btnPrev, btnHome;
+    private Button btnNext, btnPrev;
     private TextView txtPage;
     private LeaderboardDbHelper dbHelper;
     private LeaderboardAdapter adapter;
@@ -35,7 +32,6 @@ public class LeaderboardActivity extends Activity {
         listView = findViewById(R.id.listViewLeaderboard);
         btnNext = findViewById(R.id.btnNext);
         btnPrev = findViewById(R.id.btnPrev);
-        btnHome = findViewById(R.id.btnHome);
         txtPage = findViewById(R.id.txtPageNumber);
 
         // Ensure dbHelper is initialized before use
@@ -69,15 +65,6 @@ public class LeaderboardActivity extends Activity {
                     adapter.updateEntries(newEntries);
                     updatePageNumber();
                 }
-            }
-        });
-
-        btnHome.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(LeaderboardActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
             }
         });
     }
