@@ -13,6 +13,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.cs205_g1t2.leaderboard.LeaderboardActivity;
+
 public class MainActivity extends AppCompatActivity {
     private Game game;
     private MusicService musicService;
@@ -54,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
         // Play button click handler
         findViewById(R.id.btn_play).setOnClickListener(v -> {
             startActivity(new Intent(this, GameActivity.class));
+        });
+
+        // Leaderboard
+        findViewById(R.id.btn_leaderboard).setOnClickListener(v -> {
+            startActivity(new Intent(this, LeaderboardActivity.class));
         });
     }
 

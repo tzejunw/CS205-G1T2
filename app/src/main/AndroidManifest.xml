@@ -29,6 +29,11 @@
             <!-- No intent-filter here; it's launched from MainActivity -->
         </activity>
 
+        <activity
+            android:name=".leaderboard.LeaderboardActivity"
+            android:label="Leaderboard" />
+
+
         <service android:name=".MusicService"
             android:exported="false"/>
 
