@@ -1,6 +1,5 @@
 package com.example.cs205_g1t2;
 
-import static android.os.SystemClock.sleep;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -32,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -52,8 +52,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final float HORIZONTAL_SPACING = 300;
     // Execution slots (4 positions, 2 processes each)
     private final PointF[] executionSlots = {
-            new PointF(200, 200), new PointF(500, 200),
-            new PointF(200, 400), new PointF(500, 400)
+            new PointF(200, 320), new PointF(500, 320),
+            new PointF(200, 520), new PointF(500, 520)
     };
 
     // Process layout configuration
@@ -76,13 +76,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     private static final int MAX_PROCESSES = 8; // Maximum number of processes allowed
     private int topProcessCount = 0; // Count of processes at the top
-
-    // Add these variables
     private int currentHealth = 3;
     private final int maxHealth = 3;
     private Bitmap healthFilledBitmap;
     private Bitmap healthEmptyBitmap;
-    private final PointF healthIconPosition = new PointF(1950, 400); // Top-left position
+    private final PointF healthIconPosition = new PointF(1875, 975); // Top-left position
     private final float healthIconSpacing = 120f; // Space between health icons
     private static final float HEALTH_ICON_SIZE_DP = 50f; // 40dp base size
     private float healthIconSizePx; // Actual pixel size
@@ -102,6 +100,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private SoundPool soundPool;
     private final int attackerSoundId;
     private boolean soundsLoaded = false;
+    private Bitmap backgroundBitmap;
 
     public Game(Context context) {
         super(context);
@@ -119,6 +118,23 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             DisplayMetrics metrics = context.getResources().getDisplayMetrics();
             float density = metrics.density;
             healthIconSizePx = HEALTH_ICON_SIZE_DP * density;
+
+            try {
+                // Load background from assets
+                InputStream bgStream = context.getAssets().open("background.png");
+                backgroundBitmap = BitmapFactory.decodeStream(bgStream);
+                bgStream.close();
+
+                // Scale to screen size
+                backgroundBitmap = Bitmap.createScaledBitmap(
+                        backgroundBitmap,
+                        metrics.widthPixels,
+                        metrics.heightPixels,
+                        true
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             // Scale bitmaps proportionally
             healthFilledBitmap = Bitmap.createScaledBitmap(
@@ -155,7 +171,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         // Get screen dimensions for dynamic positioning
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        downY = metrics.heightPixels - 200; // 200px from bottom
+        downY = metrics.heightPixels - 320; // 300px from bottom
 
         createResources();
 
@@ -209,8 +225,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         float screenHeight = metrics.heightPixels;
 
         // Add CPU resources (blue) on left side
-        float startX = 100;
-        float bottomY = screenHeight - 350;
+        float startX = 240;
+        float bottomY = screenHeight - 250;
         float spacing = 160f;
 
         for (int i = 0; i < RESOURCES_PER_TYPE; i++) {
@@ -447,7 +463,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        canvas.drawColor(Color.BLACK);
+//        canvas.drawColor(Color.BLACK);
+
+        // Draw background first
+        canvas.drawBitmap(backgroundBitmap, 0, 0, null);
 
         // Draw processes
          for(Process p : processes) {
@@ -471,9 +490,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         for (Resource r : resources) {
             r.draw(canvas);
         }
-
-//        player.draw(canvas);
-//        drawFPS(canvas);
 
         drawHealthSystem(canvas);
 
@@ -627,10 +643,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float screenWidth = metrics.widthPixels;
-        float horizontalPadding = 150;
+        float horizontalPadding = 270;
 
-        // Top positioning - use a fixed Y value near the top
-        float topY = 100; // This places processes at the top of the screen
+        // Top positioning - use a fi`xed Y value near the top
+        float topY = 220; // This places processes at the top of the screen
 
         // Grid configuration
         float availableWidth = screenWidth - 2 * horizontalPadding;
@@ -671,10 +687,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         Process newProcess = new Process(getContext(), x, y, Color.GREEN);
         newProcess.setListener(this);
         processes.add(newProcess);
-
-
     }
-
 
     @Override
     public void onTimerFinished(Process process) {

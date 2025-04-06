@@ -172,61 +172,61 @@ public class Process {
         }
 
         // Only draw resource requirements when process is at the top (not being dragged)
-        if (y < 200) { // This checks if the process is positioned at the top of the screen
-            // Create dialog box background below the process
-            float dialogWidth = 180;
-            float dialogHeight = 120;
-            float dialogX = x - dialogWidth/2;
-            float dialogY = y + radius + 10; // Position below the process
+        float dialogWidth = 200;
+        float dialogHeight = 130;
+        float dialogX = x - dialogWidth / 2;
+        float dialogY = y + radius + 10; // Position below the process
 
-            // Draw dialog background
-            Paint dialogPaint = new Paint();
-            dialogPaint.setColor(Color.argb((int)(220 * dialogAlpha), 255, 255, 255));
+        // Draw dialog background
+        Paint dialogPaint = new Paint();
+        dialogPaint.setColor(Color.argb((int) (220 * dialogAlpha), 255, 255, 255));
 
-            // Draw rounded rectangle for dialog
-            RectF dialogRect = new RectF(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
-            canvas.drawRoundRect(dialogRect, 15, 15, dialogPaint);
 
-            // Draw dialog border
-            Paint borderPaint = new Paint();
-            borderPaint.setStyle(Paint.Style.STROKE);
-            borderPaint.setStrokeWidth(2);
-            borderPaint.setColor(Color.WHITE);
-            canvas.drawRoundRect(dialogRect, 15, 15, borderPaint);
 
-            // Draw resource requirements inside dialog
-            float iconSize = 30f;
-            float startX = dialogX + 20;
-            float startY = dialogY + 30;
-            float textOffset = 75;
+        // Draw rounded rectangle for dialog
+        RectF dialogRect = new RectF(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
+        canvas.drawRoundRect(dialogRect, 15, 15, dialogPaint);
 
-            Paint textPaint = new Paint();
-            textPaint.setColor(Color.BLACK);
-            textPaint.setTextSize(24);
+        // Draw dialog border
+        Paint borderPaint = new Paint();
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(2);
+        borderPaint.setColor(Color.WHITE);
+        canvas.drawRoundRect(dialogRect, 15, 15, borderPaint);
 
-            // Draw each resource type in the dialog
-            for (Resource.Type type : Resource.Type.values()) {
-                Paint resourcePaint = new Paint();
-                resourcePaint.setColor(type.getColor());
+        // Draw resource requirements inside dialog
+        float iconSize = 30f;
+        float startX = dialogX + 25;
+        float startY = dialogY + 40;
+        float textOffset = 90;
 
-                canvas.drawCircle(startX + iconSize/2, startY, iconSize/2, resourcePaint);
+        // For the text
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(24);
 
-                String text = allocatedResources.get(type) + "/" + requiredResources.get(type);
-                canvas.drawText(text, startX + textOffset, startY + 8, textPaint);
+        // Draw each resource type in the dialog
+        for (Resource.Type type : Resource.Type.values()) {
+            Paint resourcePaint = new Paint();
+            resourcePaint.setColor(type.getColor());
 
-                // You could add visual indicators for fulfilled requirements
-                if (allocatedResources.get(type) >= requiredResources.get(type)) {
-                    Paint checkPaint = new Paint();
-                    checkPaint.setColor(Color.GREEN);
-                    checkPaint.setStrokeWidth(3);
-                    // Draw a checkmark or other indicator
-                    canvas.drawLine(startX + textOffset + 50, startY - 5, startX + textOffset + 60, startY + 5, checkPaint);
-                    canvas.drawLine(startX + textOffset + 60, startY + 5, startX + textOffset + 70, startY - 10, checkPaint);
-                }
+            canvas.drawCircle(startX + iconSize / 2, startY, iconSize / 2, resourcePaint);
 
-                // Move to next resource type (next row in dialog)
-                startY += 50;
+            String text = allocatedResources.get(type) + "/" + requiredResources.get(type);
+            canvas.drawText(text, startX + textOffset, startY + 8, textPaint);
+
+            // You could add visual indicators for fulfilled requirements
+            if (allocatedResources.get(type) >= requiredResources.get(type)) {
+                Paint checkPaint = new Paint();
+                checkPaint.setColor(Color.GREEN);
+                checkPaint.setStrokeWidth(3);
+                // Draw a checkmark or other indicator
+                canvas.drawLine(startX + textOffset + 50, startY - 5, startX + textOffset + 60, startY + 5, checkPaint);
+                canvas.drawLine(startX + textOffset + 60, startY + 5, startX + textOffset + 70, startY - 10, checkPaint);
             }
+
+            // Move to next resource type (next row in dialog)
+            startY += 50;
         }
 
         // Draw execution progress arc if executing
@@ -291,11 +291,11 @@ public class Process {
 
 
         // Draw label text
-        Paint textPaint = new Paint();
-        textPaint.setColor(Color.BLACK); // white
-        textPaint.setTextSize(30);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(label, x, y + 10, textPaint);
+        Paint textPaint1 = new Paint();
+        textPaint1.setColor(Color.BLACK); // white
+        textPaint1.setTextSize(30);
+        textPaint1.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(label, x, y + 10, textPaint1);
     }
 
     public boolean contains(float touchX, float touchY) {
@@ -332,7 +332,7 @@ public class Process {
     }
 
     public void update() {
-        if (y < 200 && !completed) { // Process is at top
+        if (y < 300 && !completed) { // Process is at top
             if (dialogAlpha < 1.0f) {
                 dialogAlpha += DIALOG_ANIMATION_SPEED;
                 if (dialogAlpha > 1.0f) dialogAlpha = 1.0f;
