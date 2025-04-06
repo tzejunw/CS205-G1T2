@@ -95,12 +95,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final float FIRE_SIZE_DP = 40f; // 64dp = ~1cm on screen
     private static final float ATTACKER_WIDTH_DP = 300f; // Width-based scaling
     private static final float ATTACKER_CHANCE = 0.01f; // 0.1% chance per frame
-    private long gameStartTime;
+    private final long gameStartTime;
     private static final long ATTACKER_DELAY = 5000; // 20 seconds in milliseconds
     private long lastAttackTime = 0;
     private static final long ATTACKER_COOLDOWN = 10000; // 10 seconds between attacks
     private SoundPool soundPool;
-    private int attackerSoundId;
+    private final int attackerSoundId;
     private boolean soundsLoaded = false;
 
     public Game(Context context) {
@@ -608,8 +608,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         long adjustedSpawnInterval = processes.size() < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
 
-        // Existing process spawning
-//      //  long currentTime = System.currentTimeMillis();
+
         if (currentTime - lastProcessSpawnTime >= adjustedSpawnInterval) {
             spawnNewProcess();
             lastProcessSpawnTime = currentTime;
