@@ -347,6 +347,7 @@ public class Process {
             if (currentTime - creationTime >= pendingDuration) {
                 if (listener != null) {
                     listener.onTimerFinished(this);
+                    this.completed = true;
                 }
             }
         }
@@ -393,5 +394,9 @@ public class Process {
 
     public Map<Resource.Type, Integer> getAllocatedResources() {
         return allocatedResources;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 }
