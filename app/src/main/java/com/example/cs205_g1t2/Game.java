@@ -82,7 +82,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final int maxHealth = 3;
     private Bitmap healthFilledBitmap;
     private Bitmap healthEmptyBitmap;
-    private final PointF healthIconPosition = new PointF(1950, 50); // Top-left position
+    private final PointF healthIconPosition = new PointF(1950, 400); // Top-left position
     private final float healthIconSpacing = 120f; // Space between health icons
     private static final float HEALTH_ICON_SIZE_DP = 50f; // 40dp base size
     private float healthIconSizePx; // Actual pixel size
