@@ -708,8 +708,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
             if (currentHealth <= 0) {
                 gameOver = true;
-                returnToMainMenu();
-                // Optional: Add game over sound/vibration
+
+                // Template code for leaderboard
+                LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
+                dbHelper.insertRecord(999); // todo: change this to score once done
+
+                // returnToMainMenu();
             }
 
         }
