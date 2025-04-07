@@ -1,5 +1,8 @@
 package com.example.cs205_g1t2;
 
+import static android.os.SystemClock.sleep;
+
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +19,7 @@ import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -32,13 +36,15 @@ import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
+import com.example.cs205_g1t2.leaderboard.LeaderboardDbHelper;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     private final Player player;
-    private GameLoop gameLoop;
+    public GameLoop gameLoop;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
@@ -702,11 +708,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
             if (currentHealth <= 0) {
                 gameOver = true;
+                returnToMainMenu();
                 // Optional: Add game over sound/vibration
             }
-            else {
-                // Optional: Add hurt sound effect
-            }
+
         }
     }
 
@@ -746,6 +751,19 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         if (!gameLoop.isAlive()) {
             gameLoop = new GameLoop(this, getHolder());
             gameLoop.startLoop();
+        }
+    }
+
+    private void returnToMainMenu() {
+        // Get reference to the activity context
+        Context context = getContext();
+        if (context instanceof GameActivity) {
+            gameOver = true;
+
+            LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
+            dbHelper.insertRecord(999); // todo: change this to score once done
+
+            ((Activity) getContext()).finish();
         }
     }
 
