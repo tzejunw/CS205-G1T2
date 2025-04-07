@@ -45,6 +45,7 @@ import java.util.List;
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     private final Player player;
     public GameLoop gameLoop;
+    private ScoreManager scoreManager;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
@@ -110,6 +111,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     public Game(Context context) {
         super(context);
+        scoreManager = new ScoreManager(context);
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
         gameStartTime = System.currentTimeMillis();
@@ -498,6 +500,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
 
         drawHealthSystem(canvas);
+        scoreManager.draw(canvas, getWidth());
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -569,6 +572,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
+                scoreManager.addScore(10);
                 p.resetAllocatedResources(); // Reset resources used by this process
                 iterator.remove();
             }
@@ -711,8 +715,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
                 // Template code for leaderboard
                 LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
-                dbHelper.insertRecord(999); // todo: change this to score once done
+                dbHelper.insertRecord(scoreManager.getScore()); // todo: change this to score once done
 
+                scoreManager.resetScore();
                 // returnToMainMenu();
             }
 
