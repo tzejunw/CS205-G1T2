@@ -500,7 +500,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
 
         drawHealthSystem(canvas);
-        scoreManager.draw(canvas, getWidth());
+        scoreManager.draw(canvas, getHeight());
 
         if (gameOver) {
             drawGameOver(canvas);
@@ -713,11 +713,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             if (currentHealth <= 0) {
                 gameOver = true;
 
-                // Template code for leaderboard
+                //  code for leaderboard
                 LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
-                dbHelper.insertRecord(scoreManager.getScore()); // todo: change this to score once done
-
-                scoreManager.resetScore();
+                dbHelper.insertRecord(scoreManager.getScore());
                 // returnToMainMenu();
             }
 
@@ -734,7 +732,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     public void resetGame() {
         gameOver = false;
-
+        scoreManager.resetScore();
         currentHealth = maxHealth;
 
         // Reset processes

@@ -31,7 +31,8 @@ public class ScoreManager {
     }
 
     // Draw score
-    public void draw(Canvas canvas, int canvasWidth) {
-        canvas.drawText("Score: $" + score, canvasWidth - 200, 60, paint);
+    public void draw(Canvas canvas, int canvasHeight) {
+        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+        canvas.drawText("" + score, 250, canvas.getHeight() - fontMetrics.descent, paint);
     }
 }
