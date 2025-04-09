@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -46,6 +47,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final Player player;
     public GameLoop gameLoop;
     private ScoreManager scoreManager;
+    private MoneyManager moneyManager;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
@@ -77,7 +79,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
 
-    private final List<Resource> resources = new ArrayList<>();
+    private List<Resource> resources = new ArrayList<>();
     private Resource selectedResource = null;
     private static final int RESOURCES_PER_TYPE = 5;
 
@@ -112,6 +114,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     public Game(Context context) {
         super(context);
         scoreManager = new ScoreManager(context);
+        moneyManager = new MoneyManager(context);
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
         gameStartTime = System.currentTimeMillis();
@@ -278,6 +281,35 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
             return true; // Consume all touches when game over
         }
+
+        //check if buy CPU button is pressed
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+
+            if (x >= 150 && x <= 500 &&
+                    y >= getHeight() - 150 && y <= getHeight() - 50) {
+                synchronized (resources) { // Synchronize resource addition
+                    addResource(Resource.Type.CPU);
+                }
+                return true;
+            }
+        }
+
+        //check if buy RAM button is pressed
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+
+            if (x >= 1300 && x <= 1700 &&
+                    y >= getHeight() - 150 && y <= getHeight() - 50) {
+                synchronized (resources) { // Synchronize resource addition
+                    addResource(Resource.Type.MEMORY);
+                }
+                return true;
+            }
+        }
+
         float x = event.getX();
         float y = event.getY();
 
@@ -332,9 +364,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     }
 
     private Resource getResourceAt(float x, float y) {
-        for (Resource resource : resources) {
-            if (!resource.isBlocked() && !resource.isAllocated() && resource.contains(x, y)) {
-                return resource;
+        synchronized (resources) { // Synchronize access when iterating
+            for (Resource resource : resources) {
+                if (!resource.isBlocked() && !resource.isAllocated() && resource.contains(x, y)) {
+                    return resource;
+                }
             }
         }
         return null;
@@ -495,16 +529,63 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
          }
 
         // Draw resources
-        for (Resource r : resources) {
-            r.draw(canvas);
+        synchronized (resources){
+            for (Resource r : resources) {
+                r.draw(canvas);
+            }
         }
 
         drawHealthSystem(canvas);
-        scoreManager.draw(canvas, getHeight());
+        scoreManager.draw(canvas, canvas.getWidth());
+
+        drawBuyResource(canvas);
+
+        moneyManager.draw(canvas, canvas.getWidth());
 
         if (gameOver) {
             drawGameOver(canvas);
         }
+    }
+
+    public void drawMoneyChanges(Canvas canvas, float x, float y){
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.RED);       // Set text color to red
+        textPaint.setTextSize(50);           // Set text size
+        textPaint.setTextAlign(Paint.Align.CENTER);  // Align text to center
+        String message = "-$10";
+        canvas.drawText(message, x, y , textPaint);
+    }
+
+    public void drawBuyResource(Canvas canvas){
+        // Draw CPU button(blue)
+        Paint buttonPaint = new Paint();
+        buttonPaint.setColor(Color.BLUE);
+        RectF cpuButton = new RectF(
+                150,
+                canvas.getHeight()-150,
+                500,
+                canvas.getHeight()-50
+        );
+        canvas.drawRoundRect(cpuButton, 20, 20, buttonPaint);
+
+        // CPU button text
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(60);
+        canvas.drawText("Buy CPU", 180, canvas.getHeight()/2 + 600, textPaint);
+
+        // Draw Memory button (green)
+        buttonPaint.setColor(Color.GREEN);
+        RectF memoryButton = new RectF(
+                1300,
+                canvas.getHeight()-150,
+                1700,
+                canvas.getHeight()-50
+        );
+        canvas.drawRoundRect(memoryButton, 20, 20, buttonPaint);
+
+        // Memory button text
+        canvas.drawText("Buy RAM", 1330, canvas.getHeight()-80, textPaint);
     }
 
     private void drawHealthSystem(Canvas canvas) {
@@ -572,11 +653,19 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
-                scoreManager.addScore(10);
+                if(p.getResourcesSatisfied()){
+                    moneyManager.addMoney(10);
+                    scoreManager.addScore(10);
+                }else{
+                    if(moneyManager.getMoney() >= 10){
+                        moneyManager.minusMoney(10);
+                    }
+                }
                 p.resetAllocatedResources(); // Reset resources used by this process
                 iterator.remove();
             }
         }
+
 
         if ((currentTime - gameStartTime) >= ATTACKER_DELAY &&
                 (currentTime - lastAttackTime) >= ATTACKER_COOLDOWN) {
@@ -613,7 +702,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             if (!blockedSlots[slot]) {
                 blockedSlots[slot] = true;
 
-
                 // Vibration code
                 Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
                 if (vibrator != null && vibrator.hasVibrator()) {
@@ -640,6 +728,40 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             lastProcessSpawnTime = currentTime;
         }
 
+    }
+
+    public void addResource(Resource.Type type) {
+
+        int money = moneyManager.getMoney();
+
+        synchronized (resources){
+            DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+            float screenWidth = metrics.widthPixels;
+            float screenHeight = metrics.heightPixels;
+            float spacing = 160f;
+            float bottomY = screenHeight - 250;
+
+            // Count existing resources of this type to determine position
+            int count = 0;
+            for (Resource r : resources) {
+                if (r.getType() == type) {
+                    count++;
+                }
+            }
+
+            if (count < 9 && money >= 10){
+                // Calculate position based on type
+                float startX = (type == Resource.Type.CPU) ? 240 : screenWidth - 1600;
+                float x = startX + (count % 3) * spacing;
+                float y = bottomY - (count / 3) * spacing;
+
+                // Create and add new resource
+                Resource newResource = new Resource(getContext(), type, x, y);
+                moneyManager.minusMoney(10);
+                resources.add(newResource);
+            }
+
+        }
     }
 
     private static final float PROCESS_RADIUS = 50; // Example radius
@@ -699,6 +821,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         processes.add(newProcess);
     }
 
+
     @Override
     public void onTimerFinished(Process process) {
         // A timer on a red process has expired.
@@ -734,6 +857,32 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         gameOver = false;
         scoreManager.resetScore();
         currentHealth = maxHealth;
+
+        //reset CPU and MEM back to 5
+        synchronized (resources) {
+            resources.clear();
+            DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+            float screenWidth = metrics.widthPixels;
+            float screenHeight = metrics.heightPixels;
+            float spacing = 160f;
+            float bottomY = screenHeight - 250;
+            float startXCpu = 240; // Starting x for CPU resources
+            float startXMemory = screenWidth - 1600; // Starting x for MEMORY resources
+
+            for (int i = 0; i < 5; i++) {
+                // Position CPU resources:
+                float xCpu = startXCpu + (i % 3) * spacing; // Arrange in a grid (up to 3 per row)
+                float yCpu = bottomY - (i / 3) * spacing;
+                resources.add(new Resource(getContext(), Resource.Type.CPU, xCpu, yCpu));
+
+                // Position MEMORY resources:
+                float xMemory = startXMemory + (i % 3) * spacing;
+                float yMemory = bottomY - (i / 3) * spacing;
+                resources.add(new Resource(getContext(), Resource.Type.MEMORY, xMemory, yMemory));
+            }
+        }
+
+        moneyManager.resetMoney();
 
         // Reset processes
         processes.clear();

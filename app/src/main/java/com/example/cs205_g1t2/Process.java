@@ -62,6 +62,10 @@ public class Process {
         return this.y;
     }
 
+    public boolean getResourcesSatisfied(){
+        return resourcesSatisfied;
+    }
+
     public Process(Context context, float x, float y, int color) {
         this.context = context;
         this.x = x;
@@ -134,7 +138,7 @@ public class Process {
         }
     }
 
-    private void checkResourceSatisfaction() {
+    public void checkResourceSatisfaction() {
         resourcesSatisfied = true;
 
         for (Resource.Type type : Resource.Type.values()) {
