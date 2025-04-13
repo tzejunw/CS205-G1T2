@@ -111,6 +111,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private boolean soundsLoaded = false;
     private Bitmap backgroundBitmap;
 
+    private Rect restartButton;
+    private Rect homeButton;
+
     public Game(Context context) {
         super(context);
         scoreManager = new ScoreManager(context);
@@ -272,10 +275,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 int x = (int) event.getX();
                 int y = (int) event.getY();
 
-                // Check if restart button is pressed
-                if (x > getWidth()/2 - 200 && x < getWidth()/2 + 200 &&
-                        y > getHeight()/2 && y < getHeight()/2 + 150) {
+                if (restartButton != null && restartButton.contains(x, y)) {
                     resetGame();
+                    return true;
+                } else if (homeButton != null && homeButton.contains(x, y)) {
+                    returnToMainMenu();
                     return true;
                 }
             }
@@ -511,22 +515,22 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         canvas.drawBitmap(backgroundBitmap, 0, 0, null);
 
         // Draw processes
-         for(Process p : processes) {
-             p.draw(canvas);
-             long elapsed = System.currentTimeMillis() - p.getCreationTime();
-             long pendingDuration = p.getPendingDuration();
+        for(Process p : processes) {
+            p.draw(canvas);
+            long elapsed = System.currentTimeMillis() - p.getCreationTime();
+            long pendingDuration = p.getPendingDuration();
 
-             if (p.isExecuting()) {
-                 p.getPaint().setColor(Color.CYAN);
-             }
-             else if (elapsed < pendingDuration * 0.5) {
-                 p.getPaint().setColor(Color.GREEN);
-             } else if (elapsed < pendingDuration * 0.75) {
-                 p.getPaint().setColor(Color.YELLOW);
-             } else {
-                 p.getPaint().setColor(Color.RED);
-             }
-         }
+            if (p.isExecuting()) {
+                p.getPaint().setColor(Color.CYAN);
+            }
+            else if (elapsed < pendingDuration * 0.5) {
+                p.getPaint().setColor(Color.GREEN);
+            } else if (elapsed < pendingDuration * 0.75) {
+                p.getPaint().setColor(Color.YELLOW);
+            } else {
+                p.getPaint().setColor(Color.RED);
+            }
+        }
 
         // Draw resources
         synchronized (resources){
@@ -625,18 +629,35 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         // Draw restart button
         Paint buttonPaint = new Paint();
         buttonPaint.setColor(Color.BLUE);
-        Rect restartButton = new Rect(
-                canvas.getWidth()/2 - 200,
-                canvas.getHeight()/2,
-                canvas.getWidth()/2 + 200,
-                canvas.getHeight()/2 + 150
+        int buttonWidth = 200;
+        int buttonHeight = 150;
+        int centerX = canvas.getWidth() / 2;
+        int centerY = canvas.getHeight() / 2;
+        restartButton = new Rect(
+                centerX - buttonWidth,
+                centerY,
+                centerX + buttonWidth,
+                centerY + buttonHeight
         );
-        canvas.drawRect(restartButton, buttonPaint);
 
-        // Button text
+
+        canvas.drawRect(restartButton, buttonPaint);
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(60);
-        canvas.drawText("RESTART", canvas.getWidth()/2f, canvas.getHeight()/2 + 90, textPaint);
+        canvas.drawText("RESTART", canvas.getWidth() / 2f, centerY + buttonHeight / 2f + 20, textPaint);
+
+        buttonPaint.setColor(Color.DKGRAY);
+        int gap = 20; // Gap between buttons
+        int homeButtonTop = centerY + buttonHeight + gap;
+        homeButton = new Rect(
+                centerX - buttonWidth,
+                homeButtonTop,
+                centerX + buttonWidth,
+                homeButtonTop + buttonHeight
+        );
+        canvas.drawRect(homeButton, buttonPaint);
+        canvas.drawText("HOME", canvas.getWidth() / 2f, homeButtonTop + buttonHeight / 2f + 20, textPaint);
+
     }
 
     // After a process runs for a while (is green for sometime), terminate it (it disappears)
@@ -911,16 +932,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     }
 
     private void returnToMainMenu() {
-        // Get reference to the activity context
         Context context = getContext();
         if (context instanceof GameActivity) {
-            gameOver = true;
-
-            LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
-            dbHelper.insertRecord(999); // todo: change this to score once done
-
             ((Activity) getContext()).finish();
         }
     }
 
 }
+
