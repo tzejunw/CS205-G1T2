@@ -44,7 +44,7 @@ public class Resource {
         this.originalY = y;
         this.context = context;
 
-        // Load the appropriate image based on resource type
+        // Load the image based on resource type
         loadImageFromAssets();
 
         paint = new Paint();

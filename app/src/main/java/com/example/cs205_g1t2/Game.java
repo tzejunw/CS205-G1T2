@@ -49,7 +49,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
     private static final long PROCESS_SPAWN_INTERVAL = 3500; // every 3.5 seconds
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
-    private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
+    private static final float BLOCK_CHANCE = 0.005f; // 0.5% chance per frame
     private final List<Resource> resources = new ArrayList<>();
     private Resource selectedResource = null;
     private static final int RESOURCES_PER_TYPE = 5;
@@ -59,14 +59,14 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private Bitmap healthFilledBitmap;
     private Bitmap healthEmptyBitmap;
     private final PointF healthIconPosition = new PointF(1875, 975); // Top-left position
-    private static final float HEALTH_ICON_SIZE_DP = 50f; // 40dp base size
+    private static final float HEALTH_ICON_SIZE_DP = 50f;
     private Bitmap attackerBitmap;
     private Bitmap fireBitmap;
     private Resource blockedResource;
-    private static final float FIRE_SIZE_DP = 40f; // 64dp = ~1cm on screen
+    private static final float FIRE_SIZE_DP = 40f;
     private static final float ATTACKER_WIDTH_DP = 300f; // Width-based scaling
     private final long gameStartTime;
-    private static final long ATTACKER_DELAY = 5000; // 20 seconds in milliseconds
+    private static final long ATTACKER_DELAY = 5000; // 5 seconds in milliseconds
     private long lastAttackTime = 0;
     private static final long ATTACKER_COOLDOWN = 10000; // 10 seconds between attacks
     private SoundPool soundPool;

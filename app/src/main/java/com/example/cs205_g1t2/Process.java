@@ -58,8 +58,8 @@ public class Process {
         this.y = y;
         int processId = nextId++;
         this.label = "P" + processId;
-        this.executingDuration = 1000 + (long) (Math.random() * 5000); // random duration between 5 and 10 seconds
-        this.pendingDuration = 15000 + (long)(Math.random() * 5000);
+        this.executingDuration = 1000 + (long) (Math.random() * 5000); // random duration between 1 and 6 seconds
+        this.pendingDuration = 15000 + (long)(Math.random() * 5000); // random duration between 15 and 20 seconds
         this.creationTime = System.currentTimeMillis();
 
         paint = new Paint();
@@ -192,7 +192,6 @@ public class Process {
             String text = allocatedResources.get(type) + "/" + requiredResources.get(type);
             canvas.drawText(text, startX + textOffset, startY + 8, textPaint);
 
-            // You could add visual indicators for fulfilled requirements
             if (allocatedResources.get(type) >= requiredResources.get(type)) {
                 Paint checkPaint = new Paint();
                 checkPaint.setColor(Color.GREEN);
