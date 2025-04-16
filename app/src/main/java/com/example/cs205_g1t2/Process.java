@@ -242,11 +242,6 @@ public class Process {
             arcPaint.setStyle(Paint.Style.STROKE);
             arcPaint.setStrokeWidth(6);
 
-            // Optional: gradient from red to green based on progress
-//            int green = (int) (progress * 255);
-//            int red = 255 - green;
-//            arcPaint.setColor(android.graphics.Color.rgb(red, green, 0));
-
             // Arc bounds
             float left = x - radius + 8;
             float top = y - radius + 8;
@@ -320,20 +315,6 @@ public class Process {
         return completed;
     }
 
-    public void moveToExecution(float execX, float execY) {
-        this.x = execX;
-        this.y = execY;
-        this.executing = true;
-        this.executionStartTime = System.currentTimeMillis();
-        this.completed = false;
-    }
-
-    public void returnToDown() {
-        this.x = originalX;
-        this.y = originalY;
-        this.executing = false;
-        this.completed = false;
-    }
 
     public void update() {
         if (y < 300 && !completed) { // Process is at top
@@ -377,27 +358,6 @@ public class Process {
 
     public long getPendingDuration() {
         return pendingDuration;
-    }
-
-    public int getProcessId() {
-        return processId;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setDuration(long executingDuration) {
-        this.executingDuration = executingDuration;
-    }
-
-    // Add getters
-    public Map<Resource.Type, Integer> getRequiredResources() {
-        return requiredResources;
-    }
-
-    public Map<Resource.Type, Integer> getAllocatedResources() {
-        return allocatedResources;
     }
 
     public void setCompleted(boolean completed) {

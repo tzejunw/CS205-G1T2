@@ -9,8 +9,7 @@ public class GameLoop extends Thread {
     private boolean isRunning = false;
     private final SurfaceHolder surfaceHolder;
     private final Game game;
-    private double averageUPS;
-    private double averageFPS;
+
 
 
 
@@ -19,27 +18,10 @@ public class GameLoop extends Thread {
         this.surfaceHolder = surfaceHolder;
     }
 
-    public double getAverageUPS() {
-        return averageUPS;
-    }
-
-    public double getAverageFPS() {
-        return averageFPS;
-    }
 
     public void startLoop() {
         isRunning = true;
         start();
-    }
-
-    // Stop game loop - end the game
-    public void stopLoop() {
-        isRunning = false;
-        try {
-            join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -101,7 +83,6 @@ public class GameLoop extends Thread {
                 if (!game.isGameOver()) {
                     game.update();
                 }
-//                game.update();
                 updateCount++;
                 elapsedTime = System.currentTimeMillis() - startTime;
                 sleepTime = (long) (updateCount * UPS_PERIOD - elapsedTime);
@@ -110,8 +91,6 @@ public class GameLoop extends Thread {
             // Calculate average UPS and FPS
             elapsedTime = System.currentTimeMillis() - startTime;
             if (elapsedTime >= 1000) {
-                averageUPS = updateCount / (1E-3 * elapsedTime);
-                averageFPS = Math.round(frameCount / (1E-3 * elapsedTime));
                 updateCount = 0;
                 frameCount = 0;
                 startTime = System.currentTimeMillis();

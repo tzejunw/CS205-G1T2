@@ -44,26 +44,17 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
-    private final Player player;
     public GameLoop gameLoop;
     private ScoreManager scoreManager;
     private MoneyManager moneyManager;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
     private float initialTouchX, initialTouchY;
-    private static final float CLICK_THRESHOLD = 20f;
 
     // Position configuration
     private final PointF[] targetPositions;
-    private int nextTargetIndex = 0;
+
     private final float downY;
-    private static final float UP_Y = 200;
-    private static final float HORIZONTAL_SPACING = 300;
-    // Execution slots (4 positions, 2 processes each)
-    private final PointF[] executionSlots = {
-            new PointF(200, 320), new PointF(500, 320),
-            new PointF(200, 520), new PointF(500, 520)
-    };
 
     // Process layout configuration
     private final Process[] occupiedSlots = new Process[4]; // Track slot usage
@@ -84,7 +75,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final int RESOURCES_PER_TYPE = 5;
 
     private static final int MAX_PROCESSES = 8; // Maximum number of processes allowed
-    private int topProcessCount = 0; // Count of processes at the top
     private int currentHealth = 3;
     private final int maxHealth = 3;
     private Bitmap healthFilledBitmap;
@@ -96,12 +86,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     private Bitmap attackerBitmap;
     private Bitmap fireBitmap;
-    private boolean isResourceBlocked = false;
+
     private Resource blockedResource;
 
     private static final float FIRE_SIZE_DP = 40f; // 64dp = ~1cm on screen
     private static final float ATTACKER_WIDTH_DP = 300f; // Width-based scaling
-    private static final float ATTACKER_CHANCE = 0.01f; // 0.1% chance per frame
+
     private final long gameStartTime;
     private static final long ATTACKER_DELAY = 5000; // 20 seconds in milliseconds
     private long lastAttackTime = 0;
@@ -190,7 +180,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         createResources();
 
         gameLoop = new GameLoop(this, surfaceHolder);
-        player = new Player(getContext(), metrics.widthPixels/2f, metrics.heightPixels/2f, 30);
+
         setFocusable(true);
 
         // Initialize SoundPool
@@ -261,12 +251,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-    public void addProcess(Process process) {
-        // Position processes evenly at bottom
-        float x = 200 + (processes.size() * HORIZONTAL_SPACING);
-        process.setListener(this);
-        processes.add(new Process(getContext(), x, downY, Color.RED));
-    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -402,11 +386,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         });
     }
 
-    private boolean isClick(float x, float y) {
-        float dx = x - initialTouchX;
-        float dy = y - initialTouchY;
-        return Math.hypot(dx, dy) < CLICK_THRESHOLD;
-    }
 
     private Process getProcessAt(float x, float y) {
         for (Process process : processes) {
@@ -463,34 +442,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 }
             });
         });
-    }
-
-
-    private void moveProcessToTarget(Process process) {
-        if (process.isExecuting()) {
-            // Return to down position
-            returnProcess(process);
-        } else {
-            // Find first empty slot
-            for(int i = 0; i < occupiedSlots.length; i++) {
-                if(occupiedSlots[i] == null && !blockedSlots[i]) {
-                    process.moveToExecution(executionSlots[i].x, executionSlots[i].y);
-                    occupiedSlots[i] = process;
-                    break;
-                }
-            }
-        }
-    }
-
-    private void returnProcess(Process process) {
-        // Find and clear the slot
-        for(int i = 0; i < occupiedSlots.length; i++) {
-            if(occupiedSlots[i] == process) {
-                occupiedSlots[i] = null;
-                break;
-            }
-        }
-        process.returnToDown();
     }
 
 
@@ -551,14 +502,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-    public void drawMoneyChanges(Canvas canvas, float x, float y){
-        Paint textPaint = new Paint();
-        textPaint.setColor(Color.RED);       // Set text color to red
-        textPaint.setTextSize(50);           // Set text size
-        textPaint.setTextAlign(Paint.Align.CENTER);  // Align text to center
-        String message = "-$10";
-        canvas.drawText(message, x, y , textPaint);
-    }
 
     public void drawBuyResource(Canvas canvas){
         // Draw CPU button(blue)
@@ -611,13 +554,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-    public void drawFPS(Canvas canvas) {
-        String averageFPS = Integer.toString((int) gameLoop.getAverageFPS());
-        Paint paint = new Paint();
-        paint.setColor(ContextCompat.getColor(getContext(), R.color.magenta));
-        paint.setTextSize(50);
-        canvas.drawText("FPS: " + averageFPS, 1700, 100, paint);
-    }
 
     private void drawGameOver(Canvas canvas) {
         Paint textPaint = new Paint();
@@ -668,7 +604,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         long currentTime = System.currentTimeMillis();
 
         // Existing process updates
-        player.update();
         Iterator<Process> iterator = processes.iterator();
         while (iterator.hasNext()) {
             Process p = iterator.next();
@@ -787,7 +722,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
     private static final float PROCESS_RADIUS = 50; // Example radius
     private static final float MIN_DISTANCE = 5 * PROCESS_RADIUS;
-    private static final float PROCESS_GAP = 25;
 
     private void spawnNewProcess() {
         if (processes.size() >= MAX_PROCESSES) {
@@ -866,9 +800,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-    public void setCompleted(Process process) {
-        process.setCompleted(true);
-    }
 
     public boolean isGameOver() {
         return gameOver;
@@ -917,7 +848,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             return;
         }
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        player.setPosition(metrics.widthPixels/2f, metrics.heightPixels/2f);
 
         for (Resource r : resources) {
             r.resetPosition();

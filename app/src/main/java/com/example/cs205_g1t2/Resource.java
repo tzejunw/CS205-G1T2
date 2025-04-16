@@ -166,7 +166,5 @@ public class Resource {
         return blocked;
     }
 
-    public float getX() { return x; }
-    public float getY() { return y; }
 }
 

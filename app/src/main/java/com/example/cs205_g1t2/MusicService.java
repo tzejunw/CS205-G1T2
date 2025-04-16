@@ -46,15 +46,5 @@ public class MusicService extends Service {
         return binder;
     }
 
-    public void pauseMusic() {
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.pause();
-        }
-    }
 
-    public void resumeMusic() {
-        if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.start();
-        }
-    }
 }
