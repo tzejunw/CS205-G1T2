@@ -24,26 +24,18 @@ public class Process {
     private boolean selected = false;
     private boolean executing = false;
     private boolean completed = false;
-
     private long executionStartTime;
     private final long executingDuration;
-
     private final long creationTime;
     private final long pendingDuration; // time allowed in red area
-
     private ProcessListener listener;
-
     private final Map<Resource.Type, Integer> requiredResources = new HashMap<>();
     private final Map<Resource.Type, Integer> allocatedResources = new HashMap<>();
     private boolean resourcesSatisfied = false;
-
-    // Also track the actual Resource objects for position resetting
     private final List<Resource> allocatedResourceObjects = new ArrayList<>();
-
     private float dialogAlpha = 0;
     private static final float DIALOG_ANIMATION_SPEED = 0.1f;
 
-    // Implemented by Game
     public interface ProcessListener {
         void onTimerFinished(Process process);
     }
@@ -82,7 +74,6 @@ public class Process {
             e.printStackTrace();
         }
 
-
         requiredResources.put(Resource.Type.CPU, (int)(Math.random() * 2) + 1);  // 1-2 CPUs
         requiredResources.put(Resource.Type.MEMORY, (int)(Math.random() * 2) + 1);  // 1-2 Memory
 
@@ -99,7 +90,6 @@ public class Process {
         return bitmap;
     }
 
-    // New methods for resource management
     public boolean allocateResource(Resource resource) {
         Resource.Type type = resource.getType();
 
@@ -119,7 +109,6 @@ public class Process {
             resource.resetPosition();
             resource.setAllocated(false);
         }
-
         // Clear both collections
         allocatedResourceObjects.clear();
 
@@ -162,7 +151,6 @@ public class Process {
             canvas.drawCircle(x, y, radius + 5, border);
         }
 
-        // Only draw resource requirements when process is at the top (not being dragged)
         float dialogWidth = 200;
         float dialogHeight = 130;
         float dialogX = x - dialogWidth / 2;
@@ -171,8 +159,6 @@ public class Process {
         // Draw dialog background
         Paint dialogPaint = new Paint();
         dialogPaint.setColor(Color.argb((int) (220 * dialogAlpha), 255, 255, 255));
-
-
 
         // Draw rounded rectangle for dialog
         RectF dialogRect = new RectF(dialogX, dialogY, dialogX + dialogWidth, dialogY + dialogHeight);
@@ -253,7 +239,7 @@ public class Process {
             canvas.drawArc(left, top, right, bottom, -90, 360 * progress, false, arcPaint);
         }
 
-        Bitmap emoji = null;
+        Bitmap emoji;
         if (executing && !completed) {
             emoji = emojiClock;
         } else {
@@ -275,10 +261,9 @@ public class Process {
             canvas.drawBitmap(emoji, null, dst, null);
         }
 
-
         // Draw label text
         Paint textPaint1 = new Paint();
-        textPaint1.setColor(Color.BLACK); // white
+        textPaint1.setColor(Color.BLACK);
         textPaint1.setTextSize(30);
         textPaint1.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(label, x, y + 10, textPaint1);
@@ -304,7 +289,7 @@ public class Process {
 
 
     public void update() {
-        if (y < 300 && !completed) { // Process is at top
+        if (y < 300 && !completed) {
             if (dialogAlpha < 1.0f) {
                 dialogAlpha += DIALOG_ANIMATION_SPEED;
                 if (dialogAlpha > 1.0f) dialogAlpha = 1.0f;

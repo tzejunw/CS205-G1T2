@@ -1,6 +1,5 @@
 package com.example.cs205_g1t2;
 
-
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;

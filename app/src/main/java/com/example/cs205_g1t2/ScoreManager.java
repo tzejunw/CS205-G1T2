@@ -21,7 +21,6 @@ public class ScoreManager {
         score += amount;
     }
 
-    // Reset the score to zero
     public void resetScore() {
         score = 0;
     }
@@ -30,7 +29,6 @@ public class ScoreManager {
         return score;
     }
 
-    // Draw score
     public void draw(Canvas canvas, int canvasWidth) {
         Paint.FontMetrics fontMetrics = paint.getFontMetrics();
         canvas.drawText("Score: " + score, canvasWidth - 200, 250, paint);

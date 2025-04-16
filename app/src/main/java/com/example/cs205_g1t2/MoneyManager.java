@@ -25,7 +25,6 @@ public class MoneyManager {
         money -= amount;
     }
 
-    // Reset the score to zero
     public void resetMoney() {
         money = 50;
     }
@@ -34,9 +33,8 @@ public class MoneyManager {
         return money;
     }
 
-    // Draw the score at the specified canvas width (top right corner)
+    // Draw the score at the top right corner
     public void draw(Canvas canvas, int canvasWidth) {
-        // Position the text a few pixels inset from the edge
         canvas.drawText("Cash: $" + money, canvasWidth - 200, 180, paint);
     }
 }

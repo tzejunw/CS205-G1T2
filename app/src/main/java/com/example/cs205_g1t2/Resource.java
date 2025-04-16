@@ -14,13 +14,10 @@ public class Resource {
     public enum Type {
         CPU(android.graphics.Color.BLUE),
         MEMORY(android.graphics.Color.GREEN);
-
         private final int color;
-
         Type(int color) {
             this.color = color;
         }
-
         public int getColor() {
             return color;
         }
@@ -35,10 +32,8 @@ public class Resource {
     private final float originalX, originalY;
     private Bitmap resourceImage;
     private final Context context;
-
     private boolean blocked = false;
     private Bitmap originalBitmap;
-
     private Bitmap bitmap;
 
     public Resource(Context context, Type type, float x, float y) {
@@ -56,7 +51,7 @@ public class Resource {
         paint.setColor(type.getColor());
     }
 
-    // Method to load image from assets
+    // Load image from assets
     private void loadImageFromAssets() {
         try {
             String fileName = "";
@@ -91,12 +86,8 @@ public class Resource {
             float right = x + radius;
             float bottom = y + radius;
 
-            // Draw the image instead of a circle
-//            canvas.drawBitmap(resourceImage, null,
-//                    new RectF(left, left + radius*2, top, top + radius*2), paint);
             canvas.drawBitmap(resourceImage, null, new RectF(left, top, right, bottom), null);
         } else {
-            // Fallback to circle if image couldn't be loaded
             canvas.drawCircle(x, y, radius, paint);
         }
 
@@ -112,10 +103,6 @@ public class Resource {
             // Draw fire bitmap instead of normal resource
             canvas.drawBitmap(bitmap, x - bitmap.getWidth()/2, y - bitmap.getHeight()/2, null);
         }
-//        else {
-//            // Existing drawing code
-//            canvas.drawCircle(x, y, radius, paint);
-//        }
     }
 
     public boolean contains(float touchX, float touchY) {

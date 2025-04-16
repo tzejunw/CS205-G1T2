@@ -10,14 +10,10 @@ public class GameLoop extends Thread {
     private final SurfaceHolder surfaceHolder;
     private final Game game;
 
-
-
-
     public GameLoop(Game game, SurfaceHolder surfaceHolder) {
         this.game = game;
         this.surfaceHolder = surfaceHolder;
     }
-
 
     public void startLoop() {
         isRunning = true;
@@ -30,7 +26,6 @@ public class GameLoop extends Thread {
 
         // Declare time and cycle count variables
         int updateCount = 0;
-        int frameCount = 0;
 
         long startTime;
         long elapsedTime;
@@ -42,7 +37,7 @@ public class GameLoop extends Thread {
             // Try to update and render game
             try {
                 canvas = surfaceHolder.lockCanvas();
-                if (canvas != null) {  // Add this check
+                if (canvas != null) {
                     synchronized(surfaceHolder) {
                         if (!game.isGameOver()) {
                             game.update();
@@ -57,16 +52,13 @@ public class GameLoop extends Thread {
                 if (canvas != null) {
                     try {
                         surfaceHolder.unlockCanvasAndPost(canvas);
-                        frameCount++;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-
             }
 
             updateCount++;
-            frameCount++;
             // Pause game loop to not exceed target UPS
             elapsedTime = System.currentTimeMillis() - startTime;
             sleepTime = (long) (updateCount * UPS_PERIOD - elapsedTime);
@@ -88,11 +80,10 @@ public class GameLoop extends Thread {
                 sleepTime = (long) (updateCount * UPS_PERIOD - elapsedTime);
             }
 
-            // Calculate average UPS and FPS
+            // Calculate average UPS
             elapsedTime = System.currentTimeMillis() - startTime;
             if (elapsedTime >= 1000) {
                 updateCount = 0;
-                frameCount = 0;
                 startTime = System.currentTimeMillis();
             }
         }

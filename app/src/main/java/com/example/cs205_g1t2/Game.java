@@ -44,24 +44,15 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final ScoreManager scoreManager;
     private final MoneyManager moneyManager;
     private final List<Process> processes = new ArrayList<>();
-    private Process selectedProcess;
-
     private boolean gameOver = false;
-
     private long lastProcessSpawnTime = System.currentTimeMillis();
-
-    // In Game class variables
     private final boolean[] blockedSlots = new boolean[4]; // Track blocked slots
-
     private static final long PROCESS_SPAWN_INTERVAL = 3500; // every 3.5 seconds
-
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
-
     private final List<Resource> resources = new ArrayList<>();
     private Resource selectedResource = null;
     private static final int RESOURCES_PER_TYPE = 5;
-
     private static final int MAX_PROCESSES = 8; // Maximum number of processes allowed
     private int currentHealth = 3;
     private final int maxHealth = 3;
@@ -69,15 +60,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private Bitmap healthEmptyBitmap;
     private final PointF healthIconPosition = new PointF(1875, 975); // Top-left position
     private static final float HEALTH_ICON_SIZE_DP = 50f; // 40dp base size
-
     private Bitmap attackerBitmap;
     private Bitmap fireBitmap;
-
     private Resource blockedResource;
-
     private static final float FIRE_SIZE_DP = 40f; // 64dp = ~1cm on screen
     private static final float ATTACKER_WIDTH_DP = 300f; // Width-based scaling
-
     private final long gameStartTime;
     private static final long ATTACKER_DELAY = 5000; // 20 seconds in milliseconds
     private long lastAttackTime = 0;
@@ -86,9 +73,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private final int attackerSoundId;
     private boolean soundsLoaded = false;
     private Bitmap backgroundBitmap;
-
     private Rect restartButton;
     private Rect homeButton;
+    private static final float PROCESS_RADIUS = 50;
+    private static final float MIN_DISTANCE = 5 * PROCESS_RADIUS;
 
     public Game(Context context) {
         super(context);
@@ -107,7 +95,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             // Convert dp to pixels
             DisplayMetrics metrics = context.getResources().getDisplayMetrics();
             float density = metrics.density;
-            // Actual pixel size
             float healthIconSizePx = HEALTH_ICON_SIZE_DP * density;
 
             try {
@@ -147,7 +134,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             int attackerWidthPx = (int)(ATTACKER_WIDTH_DP * density);
             attackerBitmap = scaleBitmapMaintainAspect(originalAttacker, attackerWidthPx, 0);
 
-
             // Recycle original bitmaps to save memory
             originalFilled.recycle();
             originalEmpty.recycle();
@@ -157,13 +143,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             e.printStackTrace();
         }
 
-        // Get screen dimensions for dynamic positioning
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-
         createResources();
-
         gameLoop = new GameLoop(this, surfaceHolder);
-
         setFocusable(true);
 
         // Initialize SoundPool
@@ -177,7 +158,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 .setAudioAttributes(audioAttributes)
                 .build();
 
-        // Load sound file (put attacker_appear.mp3 in res/raw)
+        // Load sound file
         attackerSoundId = soundPool.load(context, R.raw.attacker_appear, 1);
 
         soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
@@ -191,13 +172,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         int width = targetWidth;
         int height = targetHeight;
 
-        if(targetHeight == 0) { // Width-based scaling
+        if(targetHeight == 0) {
             height = Math.round(targetWidth / aspectRatio);
-        } else if(targetWidth == 0) { // Height-based scaling
+        } else if(targetWidth == 0) {
             width = Math.round(targetHeight * aspectRatio);
         }
 
-        // High-quality scaling with bilinear filtering
         return Bitmap.createScaledBitmap(
                 source,
                 width,
@@ -234,7 +214,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (gameOver) {
@@ -253,7 +232,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             return true; // Consume all touches when game over
         }
 
-        //check if buy CPU button is pressed
+        // check if buy CPU button is pressed
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -267,7 +246,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
         }
 
-        //check if buy RAM button is pressed
+        // check if buy RAM button is pressed
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -294,7 +273,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                     selectedResource.setSelected(true);
                 } else {
                     // Then check for process selection
-                    selectedProcess = getProcessAt(x, y);
+                    Process selectedProcess = getProcessAt(x, y);
                     if (selectedProcess != null) {
                         selectedProcess.setSelected(true);
                     }
@@ -304,8 +283,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             case MotionEvent.ACTION_MOVE:
                 if (selectedResource != null) {
                     selectedResource.setPosition(x, y);
-                } else if (selectedProcess != null) {
-                    // Keep existing process movement code
                 }
                 return true;
 
@@ -321,11 +298,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                     } else {
                         selectedResource.resetPosition();
                     }
-
                     selectedResource.setSelected(false);
                     selectedResource = null;
-                } else if (selectedProcess != null) {
-                    // Keep existing process release code
                 }
                 return true;
         }
@@ -367,7 +341,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         });
     }
 
-
     private Process getProcessAt(float x, float y) {
         for (Process process : processes) {
             if (process.contains(x, y)) {
@@ -407,7 +380,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             fadeOut.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    // Play scream sound here if needed
                 }
 
                 @Override
@@ -425,7 +397,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         });
     }
 
-
     // SurfaceView callbacks
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
@@ -441,9 +412,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-//        canvas.drawColor(Color.BLACK);
 
-        // Draw background first
+        // Draw background
         canvas.drawBitmap(backgroundBitmap, 0, 0, null);
 
         // Draw processes
@@ -472,19 +442,17 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
 
         drawHealthSystem(canvas);
-        scoreManager.draw(canvas, canvas.getWidth());
+        scoreManager.draw(canvas, getWidth());
 
         drawBuyResource(canvas);
-
-        moneyManager.draw(canvas, canvas.getWidth());
+        moneyManager.draw(canvas, getWidth());
 
         if (gameOver) {
             drawGameOver(canvas);
         }
     }
 
-
-    public void drawBuyResource(Canvas canvas){
+    public void drawBuyResource(Canvas canvas) {
         // Draw CPU button(blue)
         Paint buttonPaint = new Paint();
         buttonPaint.setColor(Color.BLUE);
@@ -500,7 +468,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         Paint textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(60);
-        canvas.drawText("Buy CPU", 180, canvas.getHeight()/2 + 600, textPaint);
+        canvas.drawText("Buy CPU", 180, getHeight()/2 + 600, textPaint);
 
         // Draw Memory button (green)
         buttonPaint.setColor(Color.GREEN);
@@ -537,7 +505,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
     }
 
-
     private void drawGameOver(Canvas canvas) {
         Paint textPaint = new Paint();
         textPaint.setColor(Color.RED);
@@ -559,7 +526,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 centerY + buttonHeight
         );
 
-
         canvas.drawRect(restartButton, buttonPaint);
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(60);
@@ -576,10 +542,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         );
         canvas.drawRect(homeButton, buttonPaint);
         canvas.drawText("HOME", canvas.getWidth() / 2f, homeButtonTop + buttonHeight / 2f + 20, textPaint);
-
     }
-
-    // After a process runs for a while (is green for sometime), terminate it (it disappears)
 
     public void update() {
         if (gameOver) return;
@@ -592,11 +555,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             Process p = iterator.next();
             p.update();
             if (p.isCompleted()) {
-                if(p.getResourcesSatisfied()){
+                if (p.getResourcesSatisfied()) {
                     moneyManager.addMoney(10);
                     scoreManager.addScore(10);
-                }else{
-                    if(moneyManager.getMoney() >= 10){
+                } else {
+                    if (moneyManager.getMoney() >= 10) {
                         moneyManager.minusMoney(10);
                     }
                 }
@@ -604,7 +567,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 iterator.remove();
             }
         }
-
 
         if ((currentTime - gameStartTime) >= ATTACKER_DELAY &&
                 (currentTime - lastAttackTime) >= ATTACKER_COOLDOWN) {
@@ -635,45 +597,19 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             }
         }
 
-        // New slot blocking logic
-        if (Math.random() < BLOCK_CHANCE) {
-            int slot = (int) (Math.random() * 4);
-            if (!blockedSlots[slot]) {
-                blockedSlots[slot] = true;
-
-                // Vibration code
-                Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-                if (vibrator != null && vibrator.hasVibrator()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
-                    } else {
-                        vibrator.vibrate(50); // Legacy vibration
-                    }
-                }
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    blockedSlots[slot] = false;
-                }, BLOCK_DURATION);
-            }
-        }
-
-
-
         long adjustedSpawnInterval = processes.size() < MAX_PROCESSES / 2 ? PROCESS_SPAWN_INTERVAL / 5 : PROCESS_SPAWN_INTERVAL;
-
 
         if (currentTime - lastProcessSpawnTime >= adjustedSpawnInterval) {
             spawnNewProcess();
             lastProcessSpawnTime = currentTime;
         }
-
     }
 
     public void addResource(Resource.Type type) {
 
         int money = moneyManager.getMoney();
 
-        synchronized (resources){
+        synchronized (resources) {
             DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
             float screenWidth = metrics.widthPixels;
             float screenHeight = metrics.heightPixels;
@@ -688,7 +624,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 }
             }
 
-            if (count < 9 && money >= 10){
+            if (count < 9 && money >= 10) {
                 // Calculate position based on type
                 float startX = (type == Resource.Type.CPU) ? 240 : screenWidth - 1600;
                 float x = startX + (count % 3) * spacing;
@@ -699,35 +635,28 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
                 moneyManager.minusMoney(10);
                 resources.add(newResource);
             }
-
         }
     }
 
-    private static final float PROCESS_RADIUS = 50; // Example radius
-    private static final float MIN_DISTANCE = 5 * PROCESS_RADIUS;
-
     private void spawnNewProcess() {
         if (processes.size() >= MAX_PROCESSES) {
-            return; // Don't spawn more processes if we've reached the limit
+            return; // Don't spawn more processes if reached limit
         }
 
         DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
         float screenWidth = metrics.widthPixels;
         float horizontalPadding = 270;
 
-        // Top positioning - use a fi`xed Y value near the top
-        float topY = 220; // This places processes at the top of the screen
+        float topY = 220;
 
         // Grid configuration
         float availableWidth = screenWidth - 2 * horizontalPadding;
         int processesPerRow = (int) (availableWidth / MIN_DISTANCE);
-        processesPerRow = Math.max(processesPerRow, 1); // Ensure at least 1 per row
         float horizontalSpacing = availableWidth / processesPerRow;
 
         boolean[] occupied = new boolean[processesPerRow];
 
         for (Process p : processes) {
-            // Use a small threshold to determine if the process is in the top row.
             if (Math.abs(p.getY() - topY) < 10) {
                 // Calculate the column index based on its x position.
                 int col = (int) ((p.getX() - horizontalPadding + horizontalSpacing/2) / horizontalSpacing);
@@ -752,13 +681,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         }
 
         float x = horizontalPadding + freeCol * horizontalSpacing;
-        float y = topY;
 
-        Process newProcess = new Process(getContext(), x, y, Color.GREEN);
+        Process newProcess = new Process(getContext(), x, topY, Color.GREEN);
         newProcess.setListener(this);
         processes.add(newProcess);
     }
-
 
     @Override
     public void onTimerFinished(Process process) {
@@ -774,15 +701,12 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             if (currentHealth <= 0) {
                 gameOver = true;
 
-                //  code for leaderboard
+                // code for leaderboard
                 LeaderboardDbHelper dbHelper = new LeaderboardDbHelper(this.getContext());
                 dbHelper.insertRecord(scoreManager.getScore());
-                // returnToMainMenu();
             }
-
         }
     }
-
 
     public boolean isGameOver() {
         return gameOver;
@@ -793,7 +717,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         scoreManager.resetScore();
         currentHealth = maxHealth;
 
-        //reset CPU and MEM back to 5
+        // reset CPU and MEM back to 5
         synchronized (resources) {
             resources.clear();
             DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
@@ -827,7 +751,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
         if(context == null) {
             return;
         }
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
 
         for (Resource r : resources) {
             r.resetPosition();
