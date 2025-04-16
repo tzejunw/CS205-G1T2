@@ -1,17 +1,14 @@
 package com.example.cs205_g1t2;
 
-import android.content.Intent;
-import android.graphics.Color;
+
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class GameActivity extends AppCompatActivity {
-    private Game game;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +22,7 @@ public class GameActivity extends AppCompatActivity {
         );
 
         // Move original MainActivity code here
-        game = new Game(this);
+        Game game = new Game(this);
         setContentView(game);
 
 

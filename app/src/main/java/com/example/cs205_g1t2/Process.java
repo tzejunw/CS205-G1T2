@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Color;
-import android.graphics.Path;
 import android.graphics.RectF;
 
 import java.util.*;
@@ -16,9 +15,8 @@ import java.util.*;
 public class Process {
     private static int nextId = 1;
 
-    private final int processId;
     private final String label;
-    private float x, y;
+    private final float x, y;
     private final float radius = 80f;
     private final Paint paint;
     private Bitmap emojiHappy, emojiWorried, emojiPanic, emojiClock;
@@ -27,25 +25,21 @@ public class Process {
     private boolean executing = false;
     private boolean completed = false;
 
-    private float originalX, originalY;
-
     private long executionStartTime;
-    private long executingDuration;
-    // default 5 seconds execution
-    // New fields for pending (red) processes.
+    private final long executingDuration;
+
     private final long creationTime;
     private final long pendingDuration; // time allowed in red area
 
     private ProcessListener listener;
 
-    private Map<Resource.Type, Integer> requiredResources = new HashMap<>();
-    private Map<Resource.Type, Integer> allocatedResources = new HashMap<>();
+    private final Map<Resource.Type, Integer> requiredResources = new HashMap<>();
+    private final Map<Resource.Type, Integer> allocatedResources = new HashMap<>();
     private boolean resourcesSatisfied = false;
 
     // Also track the actual Resource objects for position resetting
-    private List<Resource> allocatedResourceObjects = new ArrayList<>();
+    private final List<Resource> allocatedResourceObjects = new ArrayList<>();
 
-    private boolean showDialog = false;
     private float dialogAlpha = 0;
     private static final float DIALOG_ANIMATION_SPEED = 0.1f;
 
@@ -70,10 +64,7 @@ public class Process {
         this.context = context;
         this.x = x;
         this.y = y;
-        this.originalX = x;
-        this.originalY = y;
-
-        this.processId = nextId++;
+        int processId = nextId++;
         this.label = "P" + processId;
         this.executingDuration = 1000 + (long) (Math.random() * 5000); // random duration between 5 and 10 seconds
         this.pendingDuration = 15000 + (long)(Math.random() * 5000);
@@ -156,10 +147,6 @@ public class Process {
 
     public void setListener(ProcessListener listener) {
         this.listener = listener;
-    }
-
-    public void setShowDialog(boolean showDialog) {
-        this.showDialog = showDialog;
     }
 
     public void draw(Canvas canvas) {

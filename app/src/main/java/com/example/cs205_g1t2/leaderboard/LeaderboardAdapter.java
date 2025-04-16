@@ -11,7 +11,7 @@ import android.widget.TextView;
 import java.util.List;
 
 public class LeaderboardAdapter extends BaseAdapter {
-    private Context context;
+    private final Context context;
     private List<LeaderboardEntry> entries;
 
     public LeaderboardAdapter(Context context, List<LeaderboardEntry> entries) {

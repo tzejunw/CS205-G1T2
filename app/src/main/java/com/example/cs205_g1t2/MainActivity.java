@@ -4,12 +4,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,14 +15,13 @@ import com.example.cs205_g1t2.leaderboard.LeaderboardActivity;
 
 public class MainActivity extends AppCompatActivity {
     private Game game;
-    private MusicService musicService;
     private boolean isBound = false;
 
-    private ServiceConnection connection = new ServiceConnection() {
+    private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
-            musicService = binder.getService();
+            MusicService musicService = binder.getService();
             isBound = true;
         }
 
@@ -76,9 +73,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void restartGame() {
-        finish();
-        startActivity(new Intent(this, MainActivity.class));
-        overridePendingTransition(0, 0);
-    }
 }

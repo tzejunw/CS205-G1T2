@@ -32,9 +32,9 @@ public class Resource {
     private final Paint paint;
     private boolean selected = false;
     private boolean allocated = false;
-    private float originalX, originalY;
+    private final float originalX, originalY;
     private Bitmap resourceImage;
-    private Context context;
+    private final Context context;
 
     private boolean blocked = false;
     private Bitmap originalBitmap;

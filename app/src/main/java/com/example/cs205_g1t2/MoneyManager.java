@@ -7,7 +7,7 @@ import android.graphics.Color;
 
 public class MoneyManager {
     private int money;
-    private Paint paint;
+    private final Paint paint;
 
     public MoneyManager(Context context) {
         money = 50;

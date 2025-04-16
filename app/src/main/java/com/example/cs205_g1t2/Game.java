@@ -1,7 +1,5 @@
 package com.example.cs205_g1t2;
 
-import static android.os.SystemClock.sleep;
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -20,7 +18,6 @@ import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -33,7 +30,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,19 +41,11 @@ import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback, Process.ProcessListener {
     public GameLoop gameLoop;
-    private ScoreManager scoreManager;
-    private MoneyManager moneyManager;
+    private final ScoreManager scoreManager;
+    private final MoneyManager moneyManager;
     private final List<Process> processes = new ArrayList<>();
     private Process selectedProcess;
-    private float initialTouchX, initialTouchY;
 
-    // Position configuration
-    private final PointF[] targetPositions;
-
-    private final float downY;
-
-    // Process layout configuration
-    private final Process[] occupiedSlots = new Process[4]; // Track slot usage
     private boolean gameOver = false;
 
     private long lastProcessSpawnTime = System.currentTimeMillis();
@@ -70,7 +58,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private static final long BLOCK_DURATION = 5000; // 5 seconds block
     private static final float BLOCK_CHANCE = 0.005f; // 0.1% chance per frame
 
-    private List<Resource> resources = new ArrayList<>();
+    private final List<Resource> resources = new ArrayList<>();
     private Resource selectedResource = null;
     private static final int RESOURCES_PER_TYPE = 5;
 
@@ -80,9 +68,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private Bitmap healthFilledBitmap;
     private Bitmap healthEmptyBitmap;
     private final PointF healthIconPosition = new PointF(1875, 975); // Top-left position
-    private final float healthIconSpacing = 120f; // Space between health icons
     private static final float HEALTH_ICON_SIZE_DP = 50f; // 40dp base size
-    private float healthIconSizePx; // Actual pixel size
 
     private Bitmap attackerBitmap;
     private Bitmap fireBitmap;
@@ -121,7 +107,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             // Convert dp to pixels
             DisplayMetrics metrics = context.getResources().getDisplayMetrics();
             float density = metrics.density;
-            healthIconSizePx = HEALTH_ICON_SIZE_DP * density;
+            // Actual pixel size
+            float healthIconSizePx = HEALTH_ICON_SIZE_DP * density;
 
             try {
                 // Load background from assets
@@ -170,12 +157,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
             e.printStackTrace();
         }
 
-        // Initialize target positions array
-        targetPositions = new PointF[4];
-
         // Get screen dimensions for dynamic positioning
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        downY = metrics.heightPixels - 320; // 300px from bottom
 
         createResources();
 
@@ -303,8 +286,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                initialTouchX = x;
-                initialTouchY = y;
 
                 // Check for resource selection first
                 selectedResource = getResourceAt(x, y);
@@ -538,6 +519,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
     private void drawHealthSystem(Canvas canvas) {
         for (int i = 0; i < maxHealth; i++) {
             Bitmap healthBitmap = (i < currentHealth) ? healthFilledBitmap : healthEmptyBitmap;
+            // Space between health icons
+            float healthIconSpacing = 120f;
             canvas.drawBitmap(
                     healthBitmap,
                     healthIconPosition.x + (i * healthIconSpacing),
@@ -838,9 +821,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback, Process
 
         // Reset processes
         processes.clear();
-        for (int i = 0; i < occupiedSlots.length; i++) {
-            occupiedSlots[i] = null;
-        }
 
         // Reset player position
         Context context = getContext();
