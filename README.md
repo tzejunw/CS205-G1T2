@@ -77,11 +77,14 @@ CS205-G1T2/
 
 ## Contributors
 
-Developed by Group 1 Team 2 for SMU CS205:
+Developed by:
 
-- tzejunw
-- garry014
-- *(and 3 other contributors)*
+- Tze Jun
+- Gary
+- Darren
+- Wei Qi
+- Wei Yi
+- Ryan
 
 ---
 
