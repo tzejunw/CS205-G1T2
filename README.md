@@ -15,6 +15,16 @@ This game was built as part of the CS205 module, which covers operating system p
 
 ---
 
+## Screenshots
+
+| Home Screen | In-Game Screen |
+|:-----------:|:--------------:|
+| ![Home Screen](images/rr-home.jpg) | ![In-Game Screen](images/rr-ingame.jpg) |
+
+> To update these images, add your screenshots to a `screenshots/` folder in the root of the repository and name them `home_screen.png` and `ingame_screen.png`.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -71,12 +81,9 @@ CS205-G1T2/
 
 Developed by Group 1 Team 2 for SMU CS205:
 
-- Tze Jun
-- Gary
-- Darren
-- Wei Yi
-- Wei Qi
-- Ryan
+- tzejunw
+- garry014
+- *(and 3 other contributors)*
 
 ---
 
