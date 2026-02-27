@@ -21,8 +21,6 @@ This game was built as part of the CS205 module, which covers operating system p
 |:-----------:|:--------------:|
 | ![Home Screen](images/rr-home.jpeg) | ![In-Game Screen](images/rr-ingame.jpeg) |
 
-> To update these images, add your screenshots to a `screenshots/` folder in the root of the repository and name them `home_screen.png` and `ingame_screen.png`.
-
 ---
 
 ## Getting Started
